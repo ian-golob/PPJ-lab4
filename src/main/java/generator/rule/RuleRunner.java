@@ -1,6 +1,7 @@
 package generator.rule;
 
-import generator.generator.CodeGenerator;
+import generator.generator.CodeWriter;
+import generator.generator.ProgramStack;
 import generator.semantic.SemanticException;
 import generator.semantic.SemanticFinishedException;
 import generator.model.function.Function;
@@ -25,13 +26,16 @@ public class RuleRunner {
 
     private final PrintStream out;
 
-    private final CodeGenerator generator;
+    private final CodeWriter writer;
+
+    private final ProgramStack stack;
 
 
-    public RuleRunner(ScopeController scopeController, PrintStream output, CodeGenerator generator) {
+    public RuleRunner(ScopeController scopeController, PrintStream output, CodeWriter writer, ProgramStack stack) {
         this.out = output;
         this.scope = scopeController;
-        this.generator = generator;
+        this.writer = writer;
+        this.stack = stack;
 
         RuleLoader rl = new RuleLoader(rules);
         rl.loadRules();
@@ -52,7 +56,7 @@ public class RuleRunner {
 
         try{
 
-            rule.run(node, this, scope, generator);
+            rule.run(node, this, scope, writer, stack);
 
         } catch(SemanticException ex){
             throw new SemanticFinishedException(node.getProductionErrorString());
@@ -87,6 +91,10 @@ public class RuleRunner {
             } catch (SemanticException e) {
                 throw new SemanticFinishedException("funkcija");
             }
+
+            writer.writeHeader();
+            writer.writeFunctions();
+            writer.writeConstants();
 
         } catch (SemanticFinishedException ex){
             System.err.println(ex.getMessage());

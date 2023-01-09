@@ -1,6 +1,7 @@
 package generator;
 
-import generator.generator.CodeGenerator;
+import generator.generator.CodeWriter;
+import generator.generator.ProgramStack;
 import generator.rule.RuleRunner;
 import generator.scope.ScopeController;
 import generator.tree.Node;
@@ -22,8 +23,8 @@ public class GeneratorKoda {
         this.out = out;
 
         ScopeController scopeController = new ScopeController();
-        CodeGenerator generator = new CodeGenerator(scopeController, out);
-        runner = new RuleRunner(scopeController, out, generator);
+        CodeWriter writer = new CodeWriter(scopeController, out);
+        runner = new RuleRunner(scopeController, out, writer, new ProgramStack(scopeController));
     }
 
     public static void main(String[] args) {

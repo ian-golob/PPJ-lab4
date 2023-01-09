@@ -15,6 +15,10 @@ public abstract class TreeElement {
     }
 
     public Object getProperty(String property){
+        if(properties.get(property) == null){
+            throw new NullPointerException("property is null");
+        }
+
         return properties.get(property);
     }
 

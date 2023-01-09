@@ -1,17 +1,17 @@
 package generator.generator;
 
-import generator.scope.ScopeController;
-
-import java.io.PrintStream;
-
 public class CodeGenerator {
 
-    private final ScopeController scope;
 
-    private final PrintStream out;
+    public static String generateMOVE(Integer number, Register to){
+        return " MOVE %D " + number + ", " + to.name() + "\n";
+    }
 
-    public CodeGenerator(ScopeController scope, PrintStream out) {
-        this.scope = scope;
-        this.out = out;
+    public static String generateLOAD(String address, Register to){
+        return " LOAD " + to.name() + ", " + "(" + address + ")" + "\n";
+    }
+
+    public static String generateRET() {
+        return " RET";
     }
 }

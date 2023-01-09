@@ -8,9 +8,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,7 +33,6 @@ public class IntegrationTest {
             sa.analyzeInputAndGenerateCode();
         }
 
-
         String[] friscArguments = new String[] {"node",  "./frisc/main.js", myFileName};
         Process proc = Runtime.getRuntime().exec(friscArguments);
         BufferedReader reader =
@@ -59,31 +56,31 @@ public class IntegrationTest {
     private static Stream<Arguments> provideTestDirectoryNames() {
 
         File[] officialExamplesDirectories
-                = new File("./src/test/resources/official-test-examples").listFiles(File::isDirectory);
+                = new File("./src/test/resources/test-examples/official-test-examples").listFiles(File::isDirectory);
         File[] exampleDirectories1112
-                = new File("./src/test/resources/11-12-test-examples").listFiles(File::isDirectory);
+                = new File("./src/test/resources/test-examples/11-12-test-examples").listFiles(File::isDirectory);
         File[] exampleDirectories2021
-                = new File("./src/test/resources/20-21-test-examples").listFiles(File::isDirectory);
+                = new File("./src/test/resources/test-examples/20-21-test-examples").listFiles(File::isDirectory);
         File[] exampleDirectories2122
-                = new File("./src/test/resources/21-22-test-examples").listFiles(File::isDirectory);
+                = new File("./src/test/resources/test-examples/21-22-test-examples").listFiles(File::isDirectory);
 
 
         List<String> args = new ArrayList<>();
 
         for(File file: officialExamplesDirectories){
-            args.add("official-test-examples/"+file.getName());
+            args.add("test-examples/official-test-examples/" +file.getName());
         }
 
         for(File file: exampleDirectories1112){
-            args.add("11-12-test-examples/"+file.getName());
+            args.add("test-examples/11-12-test-examples/" +file.getName());
         }
 
         for(File file: exampleDirectories2021){
-            args.add("20-21-test-examples/"+file.getName());
+            args.add("test-examples/20-21-test-examples/" +file.getName());
         }
 
         for(File file: exampleDirectories2122) {
-            args.add("21-22-test-examples/" + file.getName());
+            args.add("test-examples/21-22-test-examples/" + file.getName());
         }
 
         return args.stream().map(Arguments::of);

@@ -1,7 +1,5 @@
 package generator.rule;
 
-import generator.generator.CodeGenerator;
-import generator.generator.Register;
 import generator.semantic.SemanticException;
 import generator.model.function.Function;
 import generator.model.type.ArrayType;
@@ -56,9 +54,8 @@ public class RuleLoader {
                 scope.requireDeclared(variableName);
                 ScopeElement idn = scope.get(variableName);
 
-                String variableAddress = stack.getVariableAddress(variableName);
-
-                String code = generateLOAD(variableAddress, R6);
+                String code = stack.generateLOADVariableAddress(variableName, R6) +
+                        generateLOAD(R6.name(), R6);
 
                 node.setProperty("tip", idn.getType());
                 node.setProperty("l-izraz", idn.isLValue());
@@ -576,7 +573,6 @@ public class RuleLoader {
                 node.setProperty("kod", multiplikativni_izraz.getProperty("kod"));
             });
 
-            /*
             addRule("<aditivni_izraz>", List.of(
                     "<aditivni_izraz>",
                     "PLUS",
@@ -585,8 +581,24 @@ public class RuleLoader {
                 Node aditivni_izraz = (Node) node.getChild(0);
                 Node multiplikativni_izraz = (Node) node.getChild(2);
 
+                String code = "";
+
                 checker.run(aditivni_izraz);
+
+                String tmpVariable1 = stack.addTmpVariable();
+
+                code = code + aditivni_izraz.getProperty("kod");
+                code = code + stack.generateLOADVariableAddress(tmpVariable1, R5);
+                code = code + generateSTORE(R6, R5.name());
+
                 checker.run(multiplikativni_izraz);
+
+                code = code + multiplikativni_izraz.getProperty("kod");
+                code = code + stack.generateLOADVariableAddress(tmpVariable1, R5);
+                code = code + generateLOAD(R5.name(), R5);
+                code = code + generateADD(R5, R6, R6);
+
+                stack.removeStackEntries(1);
 
                 if (!((DataType) multiplikativni_izraz.getProperty("tip")).implicitlyCastableTo(INT) ||
                         !((DataType) aditivni_izraz.getProperty("tip")).implicitlyCastableTo(INT))
@@ -594,19 +606,35 @@ public class RuleLoader {
 
                 node.setProperty("tip", INT);
                 node.setProperty("l-izraz", Boolean.FALSE);
+                node.setProperty("kod", code);
             });
 
-            /*
             addRule("<aditivni_izraz>", List.of(
                     "<aditivni_izraz>",
                     "MINUS",
                     "<multiplikativni_izraz>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node aditivni_izraz = (Node) node.getChild(0);
                 Node multiplikativni_izraz = (Node) node.getChild(2);
 
+                String code = "";
+
                 checker.run(aditivni_izraz);
+
+                String tmpVariable1 = stack.addTmpVariable();
+
+                code = code + aditivni_izraz.getProperty("kod");
+                code = code + stack.generateLOADVariableAddress(tmpVariable1, R5);
+                code = code + generateSTORE(R6, R5.name());
+
                 checker.run(multiplikativni_izraz);
+
+                code = code + multiplikativni_izraz.getProperty("kod");
+                code = code + stack.generateLOADVariableAddress(tmpVariable1, R5);
+                code = code + generateLOAD(R5.name(), R5);
+                code = code + generateSUB(R5, R6, R6);
+
+                stack.removeStackEntries(1);
 
                 if (!((DataType) multiplikativni_izraz.getProperty("tip")).implicitlyCastableTo(INT) ||
                         !((DataType) aditivni_izraz.getProperty("tip")).implicitlyCastableTo(INT))
@@ -614,8 +642,8 @@ public class RuleLoader {
 
                 node.setProperty("tip", INT);
                 node.setProperty("l-izraz", Boolean.FALSE);
+                node.setProperty("kod", code);
             });
-            */
         }
 
         // <odnosni_izraz>
@@ -1678,9 +1706,11 @@ public class RuleLoader {
 
                 Variable variable = (Variable) izravni_deklarator.getProperty("variable");
 
+
                 String code = (String) izravni_deklarator.getProperty("kod") +
                         (String) inicijalizator.getProperty("kod") +
-                        generateSTORE(R6, stack.getVariableAddress(variable.getName()));
+                        stack.generateLOADVariableAddress(variable.getName(), R5) +
+                        generateSTORE(R6, R5.name());
 
                 node.setProperty("kod", code);
             });

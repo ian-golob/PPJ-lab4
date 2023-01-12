@@ -5,7 +5,11 @@ import generator.scope.ScopeController;
 import java.util.ArrayList;
 import java.util.List;
 
+import static generator.generator.Register.R7;
+
 public class ProgramStack {
+
+    private long tmpCounter = 0;
 
     List<StackEntry> stack = new ArrayList<>();
 
@@ -26,30 +30,29 @@ public class ProgramStack {
 
         private final StackEntryType type;
 
-        private final int value;
 
-        private StackEntry(String name, StackEntryType type, int value) {
+        private StackEntry(String name, StackEntryType type) {
             this.name = name;
             this.type = type;
-            this.value = value;
         }
     }
 
-    public void addVariable(String variableName, Integer value){
-        stack.add(new StackEntry(variableName, StackEntryType.VARIABLE, value));
+    public void addVariable(String variableName){
+        stack.add(new StackEntry(variableName, StackEntryType.VARIABLE));
     }
 
-    public String getVariableAddress(String variableName){
-
+    public String generateLOADVariableAddress(String variableName, Register to){
         for(int i = stack.size() - 1; i >= 0; i--){
             if(stack.get(i).name.equals(variableName)){
-                throw new UnsupportedOperationException();
-                //String.valueOf("R6 + blabla");
-            }
+                String code = "";
 
+                int adjustment = (stack.size() - i) * Constants.WORD_LENGTH;
+
+                return  CodeGenerator.generateADD(R7, adjustment, to);
+            }
         }
-        // assert variable is global
-        return "G_" + variableName;
+
+        return CodeGenerator.generateMOVE("G_" + variableName, to);
     }
 
     public String getReturnAddress(){
@@ -61,6 +64,18 @@ public class ProgramStack {
         }
 
         throw new IllegalArgumentException("Return address not found");
+    }
+
+    public String addTmpVariable(){
+        String name = "_tmp_" + tmpCounter++;
+
+        stack.add(new StackEntry(name, StackEntryType.VARIABLE));
+
+        return name;
+    }
+
+    public void removeStackEntries(int number){
+        stack.subList(0, stack.size() - number);
     }
 
 }

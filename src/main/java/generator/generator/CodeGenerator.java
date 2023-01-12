@@ -3,6 +3,11 @@ package generator.generator;
 public class CodeGenerator {
 
 
+    private static int lineAddressCount = 0;
+    public static String generateLineAddress(){
+        return "L_" + lineAddressCount++;
+    }
+
     public static String generateMOVE(Integer number, Register to){
         return " MOVE %D " + number + ", " + to.name() + "\n";
     }
@@ -23,8 +28,20 @@ public class CodeGenerator {
         return " STORE " + from.name() + ", (" + addressTo + ")\n";
     }
 
+    public static String generateCMP(Register r1, int number){
+        return " CMP " + r1.name() + ", " + numberToHex(number) + "\n";
+    }
+
+    public static String generateJP(String to){
+        return " JP " + to + "\n";
+    }
+
+    public static String generateJP_EQ(String to){
+        return " JP_EQ " + to + "\n";
+    }
+
     public static String generateRET() {
-        return " RET";
+        return " RET\n";
     }
 
     //SUB R1, 1, R3
@@ -60,6 +77,7 @@ public class CodeGenerator {
     public static String generateXOR(Register r1, Register r2, Register r3){
         return " XOR " + r1.name() + ", " + r2.name() + ", " + r3.name() + "\n";
     }
+
 
     private static String numberToHex(int number){
         return "0" + Integer.toHexString(number);

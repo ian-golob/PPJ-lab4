@@ -1179,15 +1179,19 @@ public class RuleLoader {
 
                 checker.run(izraz_naredba);
             });
+            */
 
             addRule("<naredba>", List.of(
                     "<naredba_grananja>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node naredba_grananja = (Node) node.getChild(0);
 
                 checker.run(naredba_grananja);
+
+                node.setProperty("kod", naredba_grananja.getProperty("kod"));
             });
 
+            /*
             addRule("<naredba>", List.of(
                     "<naredba_petlje>"
             ), (node, checker, scope) -> {
@@ -1232,14 +1236,13 @@ public class RuleLoader {
 
         // <naredba_grananja>
         {
-            /*
             addRule("<naredba_grananja>", List.of(
                     "KR_IF",
                     "L_ZAGRADA",
                     "<izraz>",
                     "D_ZAGRADA",
                     "<naredba>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node izraz = (Node) node.getChild(2);
                 Node naredba = (Node) node.getChild(4);
 
@@ -1247,6 +1250,16 @@ public class RuleLoader {
                 checker.run(naredba);
 
                 if (!((DataType) izraz.getProperty("tip")).implicitlyCastableTo(INT)) throw new SemanticException();
+
+                String lineAddress = generateLineAddress();
+
+                String code = izraz.getProperty("kod") +
+                        generateCMP(R6, 0) +
+                        generateJP_EQ(lineAddress) +
+                        naredba.getProperty("kod") +
+                        lineAddress + "\n";
+
+                node.setProperty("kod", code);
             });
 
             addRule("<naredba_grananja>", List.of(
@@ -1257,7 +1270,7 @@ public class RuleLoader {
                     "<naredba>",
                     "KR_ELSE",
                     "<naredba>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node izraz = (Node) node.getChild(2);
                 Node naredba1 = (Node) node.getChild(4);
                 Node naredba2 = (Node) node.getChild(6);
@@ -1267,8 +1280,22 @@ public class RuleLoader {
                 checker.run(naredba2);
 
                 if (!((DataType) izraz.getProperty("tip")).implicitlyCastableTo(INT)) throw new SemanticException();
+
+                String lineAddress1 = generateLineAddress();
+                String lineAddress2 = generateLineAddress();
+
+                String code = izraz.getProperty("kod") +
+                        generateCMP(R6, 0) +
+                        generateJP_EQ(lineAddress1) +
+                        naredba1.getProperty("kod") +
+                        generateJP(lineAddress2) +
+                        lineAddress1 + "\n"+
+                        naredba2.getProperty("kod") +
+                        lineAddress2 + "\n";
+
+                node.setProperty("kod", code);
             });
-            */
+
         }
 
         // <naredba_petlje>

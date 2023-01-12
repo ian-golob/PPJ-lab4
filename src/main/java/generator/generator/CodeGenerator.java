@@ -8,7 +8,11 @@ public class CodeGenerator {
     }
 
     public static String generateLOAD(String address, Register to){
-        return " LOAD " + to.name() + ", " + "(" + address + ")" + "\n";
+        return " LOAD " + to.name() + ", (" + address + ")\n";
+    }
+
+    public static String generateSTORE(Register from, String addressTo){
+        return " STORE " + from.name() + ", (" + addressTo + ")\n";
     }
 
     public static String generateRET() {

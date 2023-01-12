@@ -1,10 +1,14 @@
 package generator.generator;
 
+import generator.model.variable.Variable;
 import generator.scope.ScopeController;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CodeWriter {
 
@@ -15,6 +19,8 @@ public class CodeWriter {
     private final List<String> functionDefinitions = new ArrayList<>();
 
     private final List<String> constantDefinitions = new ArrayList<>();
+
+    private final List<String> globalVariableDefinitions = new ArrayList<>();
 
     public CodeWriter(ScopeController scope, PrintStream out) {
         this.scope = scope;
@@ -31,7 +37,10 @@ public class CodeWriter {
     }
 
     public void writeHeader() {
+        String globalVariableDefinitionsString = String.join("", globalVariableDefinitions);
+
         write(" MOVE 40000, R7\n" +
+                globalVariableDefinitionsString +
                 " CALL F_main\n" +
                 " HALT\n\n");
     }
@@ -39,6 +48,19 @@ public class CodeWriter {
     public void writeFunctions(){
         functionDefinitions.forEach(out::print);
         out.println();
+    }
+
+    public void writeGlobalVariables(){
+        List<Variable> variables = scope.getAllGlobalVariables();
+
+        variables.forEach(variable -> {
+            if(variable.isArray()){
+                // TODO
+                throw new UnsupportedOperationException();
+            }
+
+            write("G_" + variable.getName() + " DW %D 0\n");
+        });
     }
 
     public void writeConstants() {
@@ -55,4 +77,7 @@ public class CodeWriter {
         return constantAddress;
     }
 
+    public void addGlobalVariableDefinition(String kod) {
+        globalVariableDefinitions.add(kod);
+    }
 }

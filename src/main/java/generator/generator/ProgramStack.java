@@ -40,20 +40,16 @@ public class ProgramStack {
     }
 
     public String getVariableAddress(String variableName){
-        int offset = 0;
-        for(int i = 0; i < stack.size(); i++){
+
+        for(int i = stack.size() - 1; i >= 0; i--){
             if(stack.get(i).name.equals(variableName)){
-                break;
-            } else {
-                offset++;
+                throw new UnsupportedOperationException();
+                //String.valueOf("R6 + blabla");
             }
 
-            if(i == stack.size() - 1){
-                throw new IllegalArgumentException("Variable not found");
-            }
         }
-
-        return String.valueOf(Constants.STACK_TOP_ADDRESS + offset * Constants.WORD_LENGTH);
+        // assert variable is global
+        return "G_" + variableName;
     }
 
     public String getReturnAddress(){

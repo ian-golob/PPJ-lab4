@@ -5,7 +5,9 @@ import generator.model.function.Function;
 import generator.model.variable.Variable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class LocalVariableScope implements VariableScope {
 
@@ -98,10 +100,19 @@ public class LocalVariableScope implements VariableScope {
     }
 
     @Override
+    public boolean variableIsGlobal(String variableName) {
+        return outerScope.variableIsGlobal(variableName);
+    }
+
+    @Override
     public Function getGloballyDeclaredFunction(String functionName) throws SemanticException {
         return outerScope.getGloballyDeclaredFunction(functionName);
     }
 
+    @Override
+    public List<Variable> getAllGlobalVariables() {
+        return outerScope.getAllGlobalVariables();
+    }
     /*
     public void defineFunction(Function function) throws SemanticException {
         Object o = valueMap.get(function.getName());

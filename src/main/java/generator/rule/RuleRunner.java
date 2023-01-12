@@ -95,6 +95,7 @@ public class RuleRunner {
             writer.writeHeader();
             writer.writeFunctions();
             writer.writeConstants();
+            writer.writeGlobalVariables();
 
         } catch (SemanticFinishedException ex){
             System.err.println(ex.getMessage());

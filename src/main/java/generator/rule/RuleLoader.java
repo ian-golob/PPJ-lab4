@@ -1335,6 +1335,8 @@ public class RuleLoader {
                 Node deklaracija = (Node) node.getChild(0);
 
                 checker.run(deklaracija);
+
+                writer.addGlobalVariableDefinition((String) deklaracija.getProperty("kod"));
                 node.setProperty("kod", deklaracija.getProperty("kod"));
             });
         }
@@ -1544,39 +1546,42 @@ public class RuleLoader {
 
         // <deklaracija>
         {
-            /*
             addRule("<deklaracija>", List.of(
                     "<ime_tipa>",
                     "<lista_init_deklaratora>",
                     "TOCKAZAREZ"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node ime_tipa = (Node) node.getChild(0);
                 Node lista_init_deklaratora = (Node) node.getChild(1);
 
                 checker.run(ime_tipa);
                 lista_init_deklaratora.setProperty("ntip", ime_tipa.getProperty("tip"));
                 checker.run(lista_init_deklaratora);
+
+                node.setProperty("kod", lista_init_deklaratora.getProperty("kod"));
             });
-            */
         }
 
         // <lista_init_deklaratora>
         {
-            /*
+
             addRule("<lista_init_deklaratora>", List.of(
                     "<init_deklarator>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node init_deklarator = (Node) node.getChild(0);
 
                 init_deklarator.setProperty("ntip", node.getProperty("ntip"));
                 checker.run(init_deklarator);
+
+                node.setProperty("kod", init_deklarator.getProperty("kod"));
             });
+
 
             addRule("<lista_init_deklaratora>", List.of(
                     "<lista_init_deklaratora>",
                     "ZAREZ",
                     "<init_deklarator>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node lista_init_deklaratora = (Node) node.getChild(0);
                 Node init_deklarator = (Node) node.getChild(2);
 
@@ -1585,16 +1590,18 @@ public class RuleLoader {
 
                 checker.run(lista_init_deklaratora);
                 checker.run(init_deklarator);
+
+                node.setProperty("kod", (String) lista_init_deklaratora.getProperty("kod") +
+                        (String) init_deklarator.getProperty("kod"));
             });
-            */
+
         }
 
         // <init_deklarator>
         {
-            /*
             addRule("<init_deklarator>", List.of(
                     "<izravni_deklarator>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node izravni_deklarator = (Node) node.getChild(0);
 
                 izravni_deklarator.setProperty("ntip", node.getProperty("ntip"));
@@ -1605,13 +1612,15 @@ public class RuleLoader {
                 if (tip instanceof NumericType && ((NumericType) tip).isConst()) throw new SemanticException();
                 if (tip instanceof ArrayType && ((ArrayType) tip).getNumericType().isConst())
                     throw new SemanticException();
+
+                node.setProperty("kod", izravni_deklarator.getProperty("kod"));
             });
 
             addRule("<init_deklarator>", List.of(
                     "<izravni_deklarator>",
                     "OP_PRIDRUZI",
                     "<inicijalizator>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node izravni_deklarator = (Node) node.getChild(0);
                 Node inicijalizator = (Node) node.getChild(2);
 
@@ -1650,16 +1659,21 @@ public class RuleLoader {
                     throw new SemanticException();
                 }
 
+                Variable variable = (Variable) izravni_deklarator.getProperty("variable");
+
+                String code = (String) izravni_deklarator.getProperty("kod") +
+                        (String) inicijalizator.getProperty("kod") +
+                        generateSTORE(R6, stack.getVariableAddress(variable.getName()));
+
+                node.setProperty("kod", code);
             });
-            */
         }
 
         // <izravni_deklarator>
         {
-            /*
             addRule("<izravni_deklarator>", List.of(
                     "IDN"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Leaf idn = (Leaf) node.getChild(0);
 
                 DataType tip = (DataType) node.getProperty("ntip");
@@ -1669,14 +1683,23 @@ public class RuleLoader {
                 if (tip == VOID) throw new SemanticException();
                 if (scope.variableIsDeclared(idn.getSourceText())) throw new SemanticException();
 
-                scope.declareVariable(new Variable(
+                Variable variable = new Variable(
                         idn.getSourceText(),
                         tip,
                         tip instanceof NumericType && ((NumericType) tip).isConst(),
                         tip instanceof ArrayType //uvijek false valjda idk
-                ));
-            });
+                );
 
+                scope.declareVariable(variable);
+
+                if(!scope.variableIsGlobal(variable.getName())){
+                    throw new UnsupportedOperationException();
+                } else {
+                    node.setProperty("kod", "");
+                }
+                node.setProperty("variable", variable);
+            });
+            /*
             addRule("<izravni_deklarator>", List.of(
                     "IDN",
                     "L_UGL_ZAGRADA",
@@ -1761,10 +1784,9 @@ public class RuleLoader {
 
         // <inicijalizator>
         {
-            /*
             addRule("<inicijalizator>", List.of(
                     "<izraz_pridruzivanja>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node izraz_pridruzivanja = (Node) node.getChild(0);
                 checker.run(izraz_pridruzivanja);
 
@@ -1779,8 +1801,9 @@ public class RuleLoader {
                     node.setProperty("tip", izraz_pridruzivanja.getProperty("tip"));
                 }
 
+                node.setProperty("kod", izraz_pridruzivanja.getProperty("kod"));
             });
-
+            /*
             addRule("<inicijalizator>", List.of(
                     "L_VIT_ZAGRADA",
                     "<lista_izraza_pridruzivanja>",

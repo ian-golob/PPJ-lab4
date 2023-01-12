@@ -127,4 +127,12 @@ public class ScopeController {
     public boolean functionIsDeclaredLocally(String functionName) {
         return currentVariableScope.functionIsDeclaredLocally(functionName);
     }
+
+    public List<Variable> getAllGlobalVariables(){
+        return currentVariableScope.getAllGlobalVariables();
+    }
+
+    public boolean variableIsGlobal(String name) {
+        return currentVariableScope.variableIsGlobal(name);
+    }
 }

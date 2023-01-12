@@ -4,6 +4,8 @@ import generator.semantic.SemanticException;
 import generator.model.function.Function;
 import generator.model.variable.Variable;
 
+import java.util.List;
+
 public interface VariableScope {
 
     VariableScope getOuterScope();
@@ -24,5 +26,9 @@ public interface VariableScope {
 
     boolean isDeclaredGlobally(String functionName);
 
+    boolean variableIsGlobal(String variableName);
+
     Function getGloballyDeclaredFunction(String functionName) throws SemanticException;
+
+    List<Variable> getAllGlobalVariables();
 }

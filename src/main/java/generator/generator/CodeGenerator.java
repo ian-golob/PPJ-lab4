@@ -18,4 +18,14 @@ public class CodeGenerator {
     public static String generateRET() {
         return " RET";
     }
+
+    //SUB R1, 1, R3
+    public static String generateSUB(Register r1, Integer number, Register r3){
+        return " SUB " + r1.name() + ", " + number + ", " + r3.name() + "\n";
+    }
+
+    //SUB R1, R2, R3
+    public static String generateSUB(Register r1, Register r2, Register r3){
+        return " SUB " + r1.name() + ", " + r2.name() + ", " + r3.name() + "\n";
+    }
 }

@@ -338,11 +338,12 @@ public class RuleLoader {
                 node.setProperty("tip", INT);
                 node.setProperty("l-izraz", Boolean.FALSE);
             });
-
+            */
             addRule("<unarni_izraz>", List.of(
                     "<unarni_operator>",
                     "<cast_izraz>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
+                Node unarni_operator = (Node) node.getChild(0);
                 Node cast_izraz = (Node) node.getChild(1);
 
                 checker.run(cast_izraz);
@@ -352,8 +353,23 @@ public class RuleLoader {
 
                 node.setProperty("tip", INT);
                 node.setProperty("l-izraz", Boolean.FALSE);
+
+                String code = (String) cast_izraz.getProperty("kod");
+
+                switch (unarni_operator.getChild(0).getName()){
+                    case "PLUS":
+                        break;
+                    case "MINUS":
+                        code = code + generateMOVE(0, R0);
+                        code = code + generateSUB(R0, R6, R6);
+                        break;
+                    case "OP_TILDA":
+                    case "OP_NEG":
+                        throw new UnsupportedOperationException();
+                }
+
+                node.setProperty("kod", code);
             });
-            */
         }
 
         // <unarni_operator>
@@ -565,7 +581,7 @@ public class RuleLoader {
                     "<aditivni_izraz>",
                     "PLUS",
                     "<multiplikativni_izraz>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node aditivni_izraz = (Node) node.getChild(0);
                 Node multiplikativni_izraz = (Node) node.getChild(2);
 
@@ -580,6 +596,7 @@ public class RuleLoader {
                 node.setProperty("l-izraz", Boolean.FALSE);
             });
 
+            /*
             addRule("<aditivni_izraz>", List.of(
                     "<aditivni_izraz>",
                     "MINUS",

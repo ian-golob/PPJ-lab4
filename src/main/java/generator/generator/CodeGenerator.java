@@ -7,6 +7,10 @@ public class CodeGenerator {
         return " MOVE %D " + number + ", " + to.name() + "\n";
     }
 
+    public static String generateFunctionCALL(String functionName){
+        return " CALL F_" + functionName + "\n";
+    }
+
     public static String generateMOVE(String from, Register to){
         return " MOVE " + from + ", " + to.name() + "\n";
     }
@@ -25,7 +29,7 @@ public class CodeGenerator {
 
     //SUB R1, 1, R3
     public static String generateSUB(Register r1, int number, Register r3){
-        return " SUB " + r1.name() + ", " + number + ", " + r3.name() + "\n";
+        return " SUB " + r1.name() + ", " + numberToHex(number) + ", " + r3.name() + "\n";
     }
 
     //SUB R1, R2, R3
@@ -40,6 +44,24 @@ public class CodeGenerator {
 
     //ADD R1, R2, R3
     public static String generateADD(Register r1, int number, Register r3){
-        return " ADD " + r1.name() + ", " + number + ", " + r3.name() + "\n";
+        return " ADD " + r1.name() + ", " + numberToHex(number) + ", " + r3.name() + "\n";
+    }
+
+    //OR R1, R2, R3
+    public static String generateOR(Register r1, Register r2, Register r3){
+        return " OR " + r1.name() + ", " + r2.name() + ", " + r3.name() + "\n";
+    }
+
+    //AND R1, R2, R3
+    public static String generateAND(Register r1, Register r2, Register r3){
+        return " AND " + r1.name() + ", " + r2.name() + ", " + r3.name() + "\n";
+    }
+
+    public static String generateXOR(Register r1, Register r2, Register r3){
+        return " XOR " + r1.name() + ", " + r2.name() + ", " + r3.name() + "\n";
+    }
+
+    private static String numberToHex(int number){
+        return "0" + Integer.toHexString(number);
     }
 }

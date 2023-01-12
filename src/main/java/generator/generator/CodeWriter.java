@@ -41,7 +41,7 @@ public class CodeWriter {
 
         write(" MOVE 40000, R7\n" +
                 globalVariableDefinitionsString +
-                " CALL F_main\n" +
+                CodeGenerator.generateFunctionCALL("main") +
                 " HALT\n\n");
     }
 

@@ -1899,7 +1899,15 @@ public class RuleLoader {
                     "<izraz_pridruzivanja>"
             ), (node, checker, scope, writer, stack) -> {
                 Node izraz_pridruzivanja = (Node) node.getChild(0);
+
+                stack.defineTmpScope();
+
                 checker.run(izraz_pridruzivanja);
+
+                int localVariableOffset = stack.getVariableScopeOffset();
+                String code = izraz_pridruzivanja.getProperty("kod") +
+                        generateADD(R7, localVariableOffset, R7);
+                stack.deleteLastTmpScope();
 
                 int charArraySize = TreeUtil.charArraySize(node);
 
@@ -1912,7 +1920,7 @@ public class RuleLoader {
                     node.setProperty("tip", izraz_pridruzivanja.getProperty("tip"));
                 }
 
-                node.setProperty("kod", izraz_pridruzivanja.getProperty("kod"));
+                node.setProperty("kod", code);
             });
             /*
             addRule("<inicijalizator>", List.of(

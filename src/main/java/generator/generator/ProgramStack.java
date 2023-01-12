@@ -11,7 +11,7 @@ public class ProgramStack {
 
     private long tmpCounter = 0;
 
-    List<StackEntry> stack = new LinkedList<>();
+    private List<StackEntry> stack = new LinkedList<>();
 
     private final ScopeController scope;
 
@@ -68,6 +68,14 @@ public class ProgramStack {
         stack.add(new StackEntry(variableName, StackEntryType.VARIABLE));
     }
 
+    public String addTmpVariable(){
+        String name = "_tmp_" + tmpCounter++;
+
+        stack.add(new StackEntry(name, StackEntryType.VARIABLE));
+
+        return name;
+    }
+
     public String generateLOADVariableAddress(String variableName, Register to){
         int adjustment = 0;
         for(int i = stack.size() - 1; i >= 0; i--){
@@ -86,13 +94,6 @@ public class ProgramStack {
         return CodeGenerator.generateMOVE("G_" + variableName, to);
     }
 
-    public String addTmpVariable(){
-        String name = "_tmp_" + tmpCounter++;
-
-        stack.add(new StackEntry(name, StackEntryType.VARIABLE));
-
-        return name;
-    }
 
     public void removeStackEntries(int number){
         stack.subList(0, stack.size() - number);

@@ -71,7 +71,6 @@ public class IntegrationTest {
             args.add("test-examples/11-12-test-examples/" +file.getName());
         }
 
-        /*
         for(File file: officialExamplesDirectories){
             args.add("test-examples/official-test-examples/" +file.getName());
         }
@@ -83,9 +82,6 @@ public class IntegrationTest {
         for(File file: exampleDirectories2122) {
             args.add("test-examples/21-22-test-examples/" + file.getName());
         }
-
-         */
-
 
         return args.stream().map(Arguments::of);
     }

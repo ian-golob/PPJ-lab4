@@ -22,6 +22,10 @@ public abstract class TreeElement {
         return properties.get(property);
     }
 
+    public boolean hasProperty(String property){
+        return properties.get(property) != null;
+    }
+
 
     public Node getParent() {
         return parent;

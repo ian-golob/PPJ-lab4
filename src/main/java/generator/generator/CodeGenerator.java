@@ -32,12 +32,32 @@ public class CodeGenerator {
         return " CMP " + r1.name() + ", " + numberToHex(number) + "\n";
     }
 
+    public static String generateCMP(Register r1, Register r2){
+        return " CMP " + r1.name() + ", " + r2.name() + "\n";
+    }
+
     public static String generateJP(String to){
         return " JP " + to + "\n";
     }
 
     public static String generateJP_EQ(String to){
         return " JP_EQ " + to + "\n";
+    }
+
+    public static String generateJP_SLT(String to){
+        return " JP_SLT " + to + "\n";
+    }
+
+    public static String generateJP_SLE(String to){
+        return " JP_SLE " + to + "\n";
+    }
+
+    public static String generateJP_SGT(String to){
+        return " JP_SGT " + to + "\n";
+    }
+
+    public static String generateJP_SGE(String to){
+        return " JP_SGE " + to + "\n";
     }
 
     public static String generateRET() {

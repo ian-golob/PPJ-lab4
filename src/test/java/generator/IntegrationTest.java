@@ -23,6 +23,8 @@ public class IntegrationTest {
         String inFileName = pathPrefix + "/test.in";
         String outFileName = pathPrefix + "/test.out";
         String myFileName = pathPrefix + "/test.my";
+        String myOutFileName = pathPrefix + "/test.my.out";
+        String myErrFileName = pathPrefix + "/test.my.err";
 
         //run generator
         try(InputStream input = new FileInputStream(inFileName);
@@ -33,21 +35,21 @@ public class IntegrationTest {
             sa.analyzeInputAndGenerateCode();
         }
 
-        String[] friscArguments = new String[] {"node",  "./frisc/main.js", myFileName};
-        Process proc = Runtime.getRuntime().exec(friscArguments);
-        BufferedReader reader =
-                new BufferedReader(new InputStreamReader(proc.getInputStream()));
-        String myOutput = reader.readLine();
+        ProcessBuilder builder = new ProcessBuilder("node", "./frisc/main.js", myFileName);
+        builder.redirectOutput(new File(myOutFileName));
+        builder.redirectError(new File(myErrFileName));
+        Process p = builder.start();
 
-        while(proc.isAlive()) {
+        while(p.isAlive()) {
             try {
-                proc.waitFor();
+                p.waitFor();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
 
         String correctOutput = Files.readString(Path.of(outFileName));
+        String myOutput = Files.readString(Path.of(myOutFileName));
 
         assertEquals(normalizeString(correctOutput), normalizeString(myOutput));
     }

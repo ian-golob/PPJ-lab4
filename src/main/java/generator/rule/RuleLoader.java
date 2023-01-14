@@ -925,17 +925,40 @@ public class RuleLoader {
                 node.setProperty("kod", code);
             });
 
-            /*
             addRule("<jednakosni_izraz>", List.of(
                     "<jednakosni_izraz>",
                     "OP_NEQ",
                     "<odnosni_izraz>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node jednakosni_izraz = (Node) node.getChild(0);
                 Node odnosni_izraz = (Node) node.getChild(2);
 
                 checker.run(jednakosni_izraz);
+
+                String tmpVariable1 = stack.addTmpVariable();
+
+                String code = "";
+                code = code + jednakosni_izraz.getProperty("kod");
+                code = code + generateSUB(R7, Constants.WORD_LENGTH, R7);
+                code = code + stack.generateLOADVariableAddress(tmpVariable1, R5);
+                code = code + generateSTORE(R6, R5.name());
+
                 checker.run(odnosni_izraz);
+
+                code = code + odnosni_izraz.getProperty("kod");
+                code = code + stack.generateLOADVariableAddress(tmpVariable1, R5);
+                code = code + generateLOAD(R5.name(), R5);
+
+                String lineAddress1 = generateLineAddress();
+                String lineAddress2 = generateLineAddress();
+
+                code = code + generateCMP(R5, R6);
+                code = code + generateJP_EQ(lineAddress1);
+                code = code + generateMOVE(1, R6);
+                code = code + generateJP(lineAddress2);
+                code = code + lineAddress1 + "\n";
+                code = code + generateMOVE(0, R6);
+                code = code + lineAddress2 +"\n";
 
                 if (!((DataType) odnosni_izraz.getProperty("tip")).implicitlyCastableTo(INT) ||
                         !((DataType) jednakosni_izraz.getProperty("tip")).implicitlyCastableTo(INT))
@@ -943,8 +966,8 @@ public class RuleLoader {
 
                 node.setProperty("tip", INT);
                 node.setProperty("l-izraz", Boolean.FALSE);
+                node.setProperty("kod", code);
             });
-            */
         }
 
         // <bin_i_izraz>

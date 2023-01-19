@@ -17,6 +17,8 @@ public class Variable implements ScopeElement {
 
     private final boolean isArray;
 
+    private int arraySize = -1;
+
 
     public Variable(String name, DataType type, boolean isConst, boolean isArray) throws SemanticException {
         this.name = Objects.requireNonNull(name);
@@ -49,5 +51,13 @@ public class Variable implements ScopeElement {
 
     public Boolean isLValue(){
         return type == NumericType.CHAR || type == NumericType.INT;
+    }
+
+    public int getArraySize() {
+        return arraySize;
+    }
+
+    public void setArraySize(int arraySize) {
+        this.arraySize = arraySize;
     }
 }

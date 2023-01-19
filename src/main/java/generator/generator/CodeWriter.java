@@ -55,11 +55,11 @@ public class CodeWriter {
 
         variables.forEach(variable -> {
             if(variable.isArray()){
-                // TODO
-                throw new UnsupportedOperationException();
+                write("G_" + variable.getName() + " DW " +
+                        "0" + ", 0".repeat(variable.getArraySize() - 1) + "\n");
+            } else {
+                write("G_" + variable.getName() + " DW %D 0\n");
             }
-
-            write("G_" + variable.getName() + " DW %D 0\n");
         });
     }
 

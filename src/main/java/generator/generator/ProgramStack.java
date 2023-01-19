@@ -48,7 +48,7 @@ public class ProgramStack {
 
 
     private enum StackEntryType {
-        VARIABLE, F_RETURN, SCOPE_START
+        VARIABLE, F_RETURN, SCOPE_START, ARRAY_START
     }
 
     private static class StackEntry {
@@ -66,6 +66,13 @@ public class ProgramStack {
 
     public void addVariable(String variableName){
         stack.add(new StackEntry(variableName, StackEntryType.VARIABLE));
+    }
+
+    public void addArray(String variableName, int size){
+        for(int i = 0; i < size - 1; i++){
+            addTmpVariable();
+        }
+        stack.add(new StackEntry(variableName, StackEntryType.ARRAY_START));
     }
 
     public void addReturnAddress() {

@@ -36,7 +36,7 @@ public class IntegrationTest {
             sa.analyzeInputAndGenerateCode();
         }
 
-        ProcessBuilder builder = new ProcessBuilder("node", "./frisc/main.js", myFileName);
+        ProcessBuilder builder = new ProcessBuilder("node", "./frisc/main.js", myFileName, "-cpufreq", "100000");
         builder.redirectOutput(new File(myOutFileName));
         builder.redirectError(new File(myErrFileName));
         Process p = builder.start();
@@ -70,7 +70,7 @@ public class IntegrationTest {
 
         List<String> args = new ArrayList<>();
 
-        /*
+
         for(File file: exampleDirectories1112){
             args.add("test-examples/11-12-test-examples/" +file.getName());
         }
@@ -78,12 +78,9 @@ public class IntegrationTest {
             args.add("test-examples/official-test-examples/" +file.getName());
         }
 
-
         for(File file: exampleDirectories2021){
             args.add("test-examples/20-21-test-examples/" +file.getName());
         }
-
-         */
         for(File file: exampleDirectories2122) {
             args.add("test-examples/21-22-test-examples/" + file.getName());
         }

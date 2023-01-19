@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static generator.generator.CodeGenerator.*;
 import static generator.generator.Register.*;
@@ -57,9 +58,18 @@ public class RuleLoader {
 
                 String code;
                 if(idn instanceof Variable){
-                    code = stack.generateLOADVariableAddress(variableName, R6) +
-                            generateLOAD(R6.name(), R6);
-                    node.setProperty("variableName", variableName);
+                    Variable var = (Variable) idn;
+
+                    if(var.isArray()){
+                        code = stack.generateLOADVariableAddress(variableName, R6);
+                        node.setProperty("variableName", variableName);
+                    } else {
+                        code = stack.generateLOADVariableAddress(variableName, R6) +
+                                generateLOAD(R6.name(), R6);
+                        node.setProperty("variableName", variableName);
+                    }
+
+
                 } else {
                     // function
                     code = generateFunctionCALL(variableName);
@@ -107,18 +117,32 @@ public class RuleLoader {
                 node.setProperty("kod", code);
             });
 
-            /*
             addRule("<primarni_izraz>", List.of(
                     "NIZ_ZNAKOVA"
-            ), (node, checker, scope, writer) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Leaf NIZ_ZNAKOVA = (Leaf) node.getChild(0);
 
                 requireValidString(NIZ_ZNAKOVA.getSourceText());
 
+
                 node.setProperty("tip", ArrayType.of(CHAR));
                 node.setProperty("l-izraz", Boolean.FALSE);
+                node.setProperty("niz", true);
+
+                String code = NIZ_ZNAKOVA.getSourceText().substring(1, NIZ_ZNAKOVA.getSourceText().length()-1)
+                        .chars().mapToObj(c -> {
+                    String tmpCode = "";
+                    String constantAddress = writer.defineConstant(c);
+                    tmpCode = tmpCode + generateLOAD(constantAddress, R6);
+                    tmpCode = tmpCode + generateLOAD(constantAddress, R6);
+                    tmpCode = tmpCode + generateSTORE(R6, R5.name());
+                    tmpCode = tmpCode + generateADD(R5, 4, R5);
+                    return tmpCode;
+                }).collect(Collectors.joining());
+
+                node.setProperty("kod", code);
             });
-            */
+
 
             addRule("<primarni_izraz>", List.of(
                     "L_ZAGRADA",
@@ -152,18 +176,27 @@ public class RuleLoader {
                 if(primarni_izraz.hasProperty("variableName")){
                     node.setProperty("variableName", primarni_izraz.getProperty("variableName"));
                 }
+
+                if(primarni_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
+
             });
-            /*
+
             addRule("<postfiks_izraz>", List.of(
                     "<postfiks_izraz>",
                     "L_UGL_ZAGRADA",
                     "<izraz>",
                     "D_UGL_ZAGRADA"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node postfiks_izraz = (Node) node.getChild(0);
                 Node izraz = (Node) node.getChild(2);
 
+
+                stack.defineTmpScope();
                 checker.run(postfiks_izraz);
+                stack.deleteLastTmpScope();
+
                 if(!(postfiks_izraz.getProperty("tip") instanceof ArrayType)){
                     throw new SemanticException();
                 }
@@ -177,8 +210,21 @@ public class RuleLoader {
                 node.setProperty("tip", ((ArrayType) postfiks_izraz.getProperty("tip")).getNumericType());
                 node.setProperty("l-izraz", !(postfiks_izraz_tip instanceof NumericType &&
                         ((NumericType) postfiks_izraz_tip).isConst()));
+
+                String variableName = (String) postfiks_izraz.getProperty("variableName");
+
+                String adresa = (String) izraz.getProperty("kod");
+
+                adresa = adresa + stack.generateLOADVariableAddress(variableName, R5);
+                adresa = adresa + generateADD(R5, R6, R5).repeat(4);
+                adresa = adresa + generateADD(R5, 0, R6);
+
+                String code = adresa + generateLOAD(R6.name(), R6);
+
+                node.setProperty("kod", code);
+                node.setProperty("adresa", adresa);
+                node.setProperty("variableName", variableName);
             });
-            */
 
             addRule("<postfiks_izraz>", List.of(
                     "<postfiks_izraz>",
@@ -248,21 +294,6 @@ public class RuleLoader {
 
                 code += (String) postfiks_izraz.getProperty("kod") +
                         generateADD(R7, 4 * codes.size(), R7);
-
-                /*
-                if (((List<DataType>) lista_argumenata.getProperty("tipovi")).size() == 1){
-                    code += codes.get(0) +
-                            generateSUB(R7, 4, R7) +
-                            generateADD(R7, 0, R5) +
-                            generateSTORE(R6, R5.name());
-                    code += (String) postfiks_izraz.getProperty("kod") +
-                            generateADD(R7, 4, R7);
-                }
-                else {
-                    throw new UnsupportedOperationException();
-                }
-
-                 */
 
                 node.setProperty("kod", code);
                 node.setProperty("tip", functionType.getReturnType());
@@ -377,6 +408,10 @@ public class RuleLoader {
                 node.setProperty("tip", postfiks_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", postfiks_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", postfiks_izraz.getProperty("kod"));
+
+                if(postfiks_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
 
 
@@ -510,15 +545,17 @@ public class RuleLoader {
                 node.setProperty("tip", unarni_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", unarni_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", unarni_izraz.getProperty("kod"));
+                if(unarni_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
 
-            /*
             addRule("<cast_izraz>", List.of(
                     "L_ZAGRADA",
                     "<ime_tipa>",
                     "D_ZAGRADA",
                     "<cast_izraz>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node ime_tipa = (Node) node.getChild(1);
                 Node cast_izraz = (Node) node.getChild(3);
 
@@ -530,8 +567,8 @@ public class RuleLoader {
 
                 node.setProperty("tip", ime_tipa.getProperty("tip"));
                 node.setProperty("l-izraz", Boolean.FALSE);
+                node.setProperty("kod", cast_izraz.getProperty("kod"));
             });
-            */
         }
 
         // <ime_tipa>
@@ -597,6 +634,9 @@ public class RuleLoader {
                 node.setProperty("tip", cast_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", cast_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", cast_izraz.getProperty("kod"));
+                if(cast_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
 
             /*
@@ -671,6 +711,9 @@ public class RuleLoader {
                 node.setProperty("tip", multiplikativni_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", multiplikativni_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", multiplikativni_izraz.getProperty("kod"));
+                if(multiplikativni_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
 
             addRule("<aditivni_izraz>", List.of(
@@ -755,6 +798,10 @@ public class RuleLoader {
                 node.setProperty("tip", aditivni_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", aditivni_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", aditivni_izraz.getProperty("kod"));
+
+                if(aditivni_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
             addRule("<odnosni_izraz>", List.of(
                     "<odnosni_izraz>",
@@ -955,6 +1002,9 @@ public class RuleLoader {
                 node.setProperty("tip", odnosni_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", odnosni_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", odnosni_izraz.getProperty("kod"));
+                if(odnosni_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
 
             addRule("<jednakosni_izraz>", List.of(
@@ -1060,6 +1110,10 @@ public class RuleLoader {
                 node.setProperty("tip", jednakosni_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", jednakosni_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", jednakosni_izraz.getProperty("kod"));
+
+                if(jednakosni_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
 
             addRule("<bin_i_izraz>", List.of(
@@ -1109,6 +1163,10 @@ public class RuleLoader {
                 node.setProperty("tip", bin_i_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", bin_i_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", bin_i_izraz.getProperty("kod"));
+
+                if(bin_i_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
 
             addRule("<bin_xili_izraz>", List.of(
@@ -1157,6 +1215,10 @@ public class RuleLoader {
                 node.setProperty("tip", bin_xili_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", bin_xili_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", bin_xili_izraz.getProperty("kod"));
+
+                if(bin_xili_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
 
             addRule("<bin_ili_izraz>", List.of(
@@ -1207,6 +1269,10 @@ public class RuleLoader {
                 node.setProperty("tip", bin_ili_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", bin_ili_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", bin_ili_izraz.getProperty("kod"));
+
+                if(bin_ili_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
 
             addRule("<log_i_izraz>", List.of(
@@ -1277,6 +1343,10 @@ public class RuleLoader {
                 node.setProperty("tip", log_i_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", log_i_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", log_i_izraz.getProperty("kod"));
+
+                if(log_i_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
 
             addRule("<log_ili_izraz>", List.of(
@@ -1346,6 +1416,10 @@ public class RuleLoader {
                 node.setProperty("tip", log_ili_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", log_ili_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", log_ili_izraz.getProperty("kod"));
+
+                if(log_ili_izraz.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
             });
 
             addRule("<izraz_pridruzivanja>", List.of(
@@ -1357,7 +1431,41 @@ public class RuleLoader {
                 Node izraz_pridruzivanja = (Node) node.getChild(2);
 
                 checker.run(postfiks_izraz);
+
+                String variableName = (String) postfiks_izraz.getProperty("variableName");
+                Variable variable = scope.getVariable(variableName);
+
+                String code = "";
+                String tmpVariable = "";
+                if(variable.isArray()){
+                    String addressCode = (String) postfiks_izraz.getProperty("adresa");
+
+                    tmpVariable = stack.addTmpVariable();
+
+                    code = code + addressCode;
+                    code = code + generateSUB(R7, Constants.WORD_LENGTH, R7);
+                    code = code + stack.generateLOADVariableAddress(tmpVariable, R5);
+                    code = code + generateSTORE(R6, R5.name());
+
+                } else {
+
+                }
+
                 checker.run(izraz_pridruzivanja);
+
+
+                if(variable.isArray()){
+
+                    code = code + izraz_pridruzivanja.getProperty("kod");
+                    code = code + stack.generateLOADVariableAddress(tmpVariable, R5);
+                    code = code + generateLOAD(R5.name(), R5);
+                    code = code + generateSTORE(R6, R5.name());
+
+                }else {
+                    code = izraz_pridruzivanja.getProperty("kod") +
+                            stack.generateLOADVariableAddress(variableName, R5) +
+                            generateSTORE(R6, R5.name());
+                }
 
                 if (!postfiks_izraz.getProperty("l-izraz").equals(Boolean.TRUE) ||
                         !((DataType) izraz_pridruzivanja.getProperty("tip"))
@@ -1367,11 +1475,6 @@ public class RuleLoader {
                 node.setProperty("tip", postfiks_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", Boolean.FALSE);
 
-                String variableName = (String) postfiks_izraz.getProperty("variableName");
-
-                String code = izraz_pridruzivanja.getProperty("kod") +
-                        stack.generateLOADVariableAddress(variableName, R5) +
-                        generateSTORE(R6, R5.name());
 
                 node.setProperty("kod", code);
             });
@@ -1873,10 +1976,18 @@ public class RuleLoader {
 
                 for (int i = 0; i < lista_imena_tipova.size(); i++) {
                     stack.addVariable(lista_imena_tipova.get(i));
+
+                    DataType type = lista_tipova.get(i);
+
+                    if(type instanceof ArrayType){
+                        //TODO
+                        throw new UnsupportedOperationException();
+                    }
+
                     scope.declareVariable(new Variable(lista_imena_tipova.get(i),
-                            lista_tipova.get(i),
+                            type,
                             false,
-                            false
+                            type instanceof ArrayType
                     ));
                 }
                 stack.addReturnAddress();
@@ -2087,13 +2198,17 @@ public class RuleLoader {
 
                 izravni_deklarator.setProperty("ntip", node.getProperty("ntip"));
                 checker.run(izravni_deklarator);
+
+                if(izravni_deklarator.hasProperty("variable")){
+                    inicijalizator.setProperty("variable", izravni_deklarator.getProperty("variable"));
+                }
+
                 checker.run(inicijalizator);
 
                 DataType tip_dekl = (DataType) izravni_deklarator.getProperty("tip");
-                DataType tip_inic = (DataType) inicijalizator.getProperty("tip");
 
                 if (tip_dekl instanceof NumericType) {
-
+                    DataType tip_inic = (DataType) inicijalizator.getProperty("tip");
                     if (!tip_inic.implicitlyCastableTo(tip_dekl)) {
                         throw new SemanticException();
                     }
@@ -2122,10 +2237,19 @@ public class RuleLoader {
 
                 Variable variable = (Variable) izravni_deklarator.getProperty("variable");
 
-                String code = (String) izravni_deklarator.getProperty("kod") +
-                        inicijalizator.getProperty("kod") +
-                        stack.generateLOADVariableAddress(variable.getName(), R5) +
-                        generateSTORE(R6, R5.name());
+                String code = (String) izravni_deklarator.getProperty("kod");
+
+
+                if(inicijalizator.hasProperty("niz")){
+                    code = code + stack.generateLOADVariableAddress(variable.getName(), R5);
+                }
+                code = code + inicijalizator.getProperty("kod");
+
+
+                if(!variable.isArray()){
+                    code = code + stack.generateLOADVariableAddress(variable.getName(), R5) +
+                            generateSTORE(R6, R5.name());
+                }
 
                 node.setProperty("kod", code);
             });
@@ -2160,13 +2284,13 @@ public class RuleLoader {
 
                 node.setProperty("variable", variable);
             });
-            /*
+
             addRule("<izravni_deklarator>", List.of(
                     "IDN",
                     "L_UGL_ZAGRADA",
                     "BROJ",
                     "D_UGL_ZAGRADA"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Leaf idn = (Leaf) node.getChild(0);
                 Leaf broj = (Leaf) node.getChild(2);
 
@@ -2180,14 +2304,27 @@ public class RuleLoader {
 
                 requireArraySize(broj.getSourceText());
 
-                scope.declareVariable(new Variable(
+                Variable variable = new Variable(
                         idn.getSourceText(),
                         tip,
                         tip.getNumericType().isConst(),
                         true
-                ));
+                );
+
+                int size = Integer.parseInt(broj.getSourceText());
+                variable.setArraySize(size);
+
+                scope.declareVariable(variable);
+
+                if(!scope.variableIsGlobal(variable.getName())){
+                    stack.addArray(variable.getName(), size);
+                    node.setProperty("kod", generateSUB(R7, 4 * size, R7));
+                } else {
+                    node.setProperty("kod", "");
+                }
 
                 node.setProperty("br-elem", Integer.valueOf(broj.getSourceText()));
+                node.setProperty("variable", variable);
             });
 
             addRule("<izravni_deklarator>", List.of(
@@ -2195,7 +2332,7 @@ public class RuleLoader {
                     "L_ZAGRADA",
                     "KR_VOID",
                     "D_ZAGRADA"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Leaf idn = (Leaf) node.getChild(0);
 
                 DataType ntip = (DataType) node.getProperty("ntip");
@@ -2211,6 +2348,7 @@ public class RuleLoader {
                 }
 
                 node.setProperty("tip", tip);
+                node.setProperty("kod", "");
             });
 
             addRule("<izravni_deklarator>", List.of(
@@ -2218,7 +2356,7 @@ public class RuleLoader {
                     "L_ZAGRADA",
                     "<lista_parametara>",
                     "D_ZAGRADA"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Leaf idn = (Leaf) node.getChild(0);
                 Node lista_parametara = (Node) node.getChild(2);
 
@@ -2239,8 +2377,8 @@ public class RuleLoader {
                 }
 
                 node.setProperty("tip", tip);
+                node.setProperty("kod", "");
             });
-            */
         }
 
         // <inicijalizator>
@@ -2270,57 +2408,95 @@ public class RuleLoader {
                     node.setProperty("tip", izraz_pridruzivanja.getProperty("tip"));
                 }
 
+                if(izraz_pridruzivanja.hasProperty("niz")) {
+                    node.setProperty("niz", true);
+                }
+
                 node.setProperty("kod", code);
             });
-            /*
+
             addRule("<inicijalizator>", List.of(
                     "L_VIT_ZAGRADA",
                     "<lista_izraza_pridruzivanja>",
                     "D_VIT_ZAGRADA"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node lista_izraza_pridruzivanja = (Node) node.getChild(1);
                 checker.run(lista_izraza_pridruzivanja);
 
+                List<String> codes = (List<String>) lista_izraza_pridruzivanja.getProperty("kodovi");
+
+                Variable variable = (Variable) node.getProperty("variable");
+                String code = stack.generateLOADVariableAddress(variable.getName(), R5);
+
+                for(int i = 0; i < codes.size(); i++){
+                    code = code + codes.get(i);
+                    code = code + generateSTORE(R6, R5.name());
+                    code = code + generateADD(R5, 4, R5);
+                }
+
                 node.setProperty("br-elem", lista_izraza_pridruzivanja.getProperty("br-elem"));
                 node.setProperty("tipovi", lista_izraza_pridruzivanja.getProperty("tipovi"));
+                node.setProperty("kod", code);
             });
-            */
+
         }
 
         // <lista_izraza_pridruzivanja>
         {
-            /*
             addRule("<lista_izraza_pridruzivanja>", List.of(
                     "<izraz_pridruzivanja>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node izraz_pridruzivanja = (Node) node.getChild(0);
+
+                stack.defineTmpScope();
+
                 checker.run(izraz_pridruzivanja);
+
+                int localVariableOffset = stack.getVariableScopeOffset();
+                String code = izraz_pridruzivanja.getProperty("kod") +
+                        generateADD(R7, localVariableOffset, R7);
+                stack.deleteLastTmpScope();
 
                 List<DataType> tipovi = new ArrayList<>();
                 tipovi.add((DataType) izraz_pridruzivanja.getProperty("tip"));
                 node.setProperty("tipovi", tipovi);
                 node.setProperty("br-elem", 1);
+
+                List<String> codes = new ArrayList<>(List.of(code));
+
+                node.setProperty("kodovi", codes);
             });
 
             addRule("<lista_izraza_pridruzivanja>", List.of(
                     "<lista_izraza_pridruzivanja>",
                     "ZAREZ",
                     "<izraz_pridruzivanja>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node lista_izraza_pridruzivanja = (Node) node.getChild(0);
                 Node izraz_pridruzivanja = (Node) node.getChild(2);
 
                 checker.run(lista_izraza_pridruzivanja);
+
+                stack.defineTmpScope();
+
                 checker.run(izraz_pridruzivanja);
+
+                int localVariableOffset = stack.getVariableScopeOffset();
+                String code = izraz_pridruzivanja.getProperty("kod") +
+                        generateADD(R7, localVariableOffset, R7);
+                stack.deleteLastTmpScope();
 
                 List<DataType> tipovi = (List<DataType>) lista_izraza_pridruzivanja.getProperty("tipovi");
                 tipovi.add((DataType) izraz_pridruzivanja.getProperty("tip"));
                 int br = (Integer) lista_izraza_pridruzivanja.getProperty("br-elem");
 
+                List<String> codes = (List<String>) lista_izraza_pridruzivanja.getProperty("kodovi");
+                codes.add(code);
+
                 node.setProperty("tipovi", tipovi);
                 node.setProperty("br-elem", br + 1);
+                node.setProperty("kodovi", codes);
             });
-            */
         }
 
     }

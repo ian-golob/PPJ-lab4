@@ -30,10 +30,6 @@ public class GlobalVariableScope implements VariableScope {
 
     @Override
     public void declareNewFunction(Function function) throws SemanticException {
-        if(valueMap.containsKey(function.getName())){
-            throw new SemanticException("Already defined in this scope");
-        }
-
         valueMap.put(function.getName(), function);
     }
 

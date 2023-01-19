@@ -81,17 +81,6 @@ public class RuleRunner {
                 throw e;
             }
 
-            // provjera funkcija
-            try {
-                for(Function function: scope.getFunctionHistory()){
-                    if(!function.isDefined()){
-                        throw new SemanticException();
-                    }
-                }
-            } catch (SemanticException e) {
-                throw e;
-            }
-
             writer.writeHeader();
             writer.writeFunctions();
             writer.writeConstants();

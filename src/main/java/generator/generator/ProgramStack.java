@@ -100,7 +100,7 @@ public class ProgramStack {
 
 
     public void removeStackEntries(int number){
-        stack.subList(0, stack.size() - number);
+        stack = stack.subList(0, stack.size() - number);
     }
 
 }

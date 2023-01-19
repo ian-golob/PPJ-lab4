@@ -236,14 +236,19 @@ public class RuleLoader {
                     }
                 }
 
-                String code = (String) lista_argumenata.getProperty("kod");
+                List<String> codes = (List<String>) lista_argumenata.getProperty("kodovi");
 
+                String code = "";
                 if (((List<DataType>) lista_argumenata.getProperty("tipovi")).size() == 1){
-                    code += generateSUB(R7, 4, R7) + generateADD(R7, 0, R5) + generateSTORE(R6, R5.name());
-                    code += (String) postfiks_izraz.getProperty("kod") + generateADD(R7, 4, R7);
+                    code += codes.get(0) +
+                            generateSUB(R7, 4, R7) +
+                            generateADD(R7, 0, R5) +
+                            generateSTORE(R6, R5.name());
+                    code += (String) postfiks_izraz.getProperty("kod") +
+                            generateADD(R7, 4, R7);
                 }
                 else {
-
+                    throw new UnsupportedOperationException();
                 }
 
                 node.setProperty("kod", code);
@@ -296,14 +301,17 @@ public class RuleLoader {
                 tipovi.add((DataType) izraz_pridruzivanja.getProperty("tip"));
 
                 node.setProperty("tipovi", tipovi);
-                node.setProperty("kod", izraz_pridruzivanja.getProperty("kod"));
+
+                String code = (String) izraz_pridruzivanja.getProperty("kod");
+                node.setProperty("kodovi", new ArrayList<>(List.of(code)));
             });
+
             /*
             addRule("<lista_argumenata>", List.of(
                     "<lista_argumenata>",
                     "ZAREZ",
                     "<izraz_pridruzivanja>"
-            ), (node, checker, scoper) -> {
+            ), (node, checker, scoper, writer, stack) -> {
 
                 Node lista_argumenata = (Node) node.getChild(0);
                 Node izraz_pridruzivanja = (Node) node.getChild(2);
@@ -315,7 +323,15 @@ public class RuleLoader {
                 tipovi.add((DataType) izraz_pridruzivanja.getProperty("tip"));
 
                 node.setProperty("tipovi", tipovi);
+
+                ArrayList<String> codes = (ArrayList<String>) lista_argumenata.getProperty("kodovi");
+                String code = (String) izraz_pridruzivanja.getProperty("kod");
+
+                codes.add(code);
+
+                node.setProperty("kodovi", codes);
             });
+
              */
         }
 
@@ -489,6 +505,7 @@ public class RuleLoader {
                 if (specifikator_tipa.getProperty("tip") == VOID) throw new SemanticException();
 
                 node.setProperty("tip", constOf((DataType) specifikator_tipa.getProperty("tip")));
+                node.setProperty("kod", specifikator_tipa.getProperty("kod"));
             });
 
         }
@@ -1735,11 +1752,16 @@ public class RuleLoader {
                 }
                 stack.addReturnAddress();
 
+                stack.defineTmpScope();
+
                 checker.run(slozena_naredba);
                 String code = (String) slozena_naredba.getProperty("kod");
 
+                stack.deleteLastTmpScope();
+
                 writer.defineFunction(IDN.getSourceText(), code);
                 node.setProperty("kod", code);
+
                 stack.removeStackEntries(lista_tipova.size() + 1);
 
                 scope.endFunctionDefinition();

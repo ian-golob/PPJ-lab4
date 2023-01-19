@@ -68,6 +68,10 @@ public class ProgramStack {
         stack.add(new StackEntry(variableName, StackEntryType.VARIABLE));
     }
 
+    public void addReturnAddress() {
+        stack.add(new StackEntry("$returnAddress", StackEntryType.F_RETURN));
+    }
+
     public String addTmpVariable(){
         String name = "_tmp_" + tmpCounter++;
 

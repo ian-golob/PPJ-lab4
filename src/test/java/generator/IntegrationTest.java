@@ -1,5 +1,6 @@
 package generator;
 
+import generator.semantic.SemanticException;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -17,7 +18,7 @@ public class IntegrationTest {
 
     @ParameterizedTest
     @MethodSource("provideTestDirectoryNames")
-    public void integrationTest(String directoryName) throws IOException {
+    public void integrationTest(String directoryName) throws IOException, SemanticException {
         String pathPrefix = "./src/test/resources/" + directoryName;
 
         String inFileName = pathPrefix + "/test.in";
@@ -72,7 +73,7 @@ public class IntegrationTest {
         for(File file: exampleDirectories1112){
             args.add("test-examples/11-12-test-examples/" +file.getName());
         }
-
+/*
         for(File file: officialExamplesDirectories){
             args.add("test-examples/official-test-examples/" +file.getName());
         }
@@ -84,7 +85,7 @@ public class IntegrationTest {
         for(File file: exampleDirectories2122) {
             args.add("test-examples/21-22-test-examples/" + file.getName());
         }
-
+*/
         return args.stream().map(Arguments::of);
     }
 

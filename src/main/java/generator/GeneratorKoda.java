@@ -4,6 +4,7 @@ import generator.generator.CodeWriter;
 import generator.generator.ProgramStack;
 import generator.rule.RuleRunner;
 import generator.scope.ScopeController;
+import generator.semantic.SemanticException;
 import generator.tree.Node;
 
 import java.io.*;
@@ -27,13 +28,13 @@ public class GeneratorKoda {
         runner = new RuleRunner(scopeController, out, writer, new ProgramStack(scopeController));
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SemanticException {
         GeneratorKoda sa = new GeneratorKoda(System.in, System.out);
 
         sa.analyzeInputAndGenerateCode();
     }
 
-    public void analyzeInputAndGenerateCode() {
+    public void analyzeInputAndGenerateCode() throws SemanticException {
         Node root = parseInput(in);
         runner.runRoot(root);
     }

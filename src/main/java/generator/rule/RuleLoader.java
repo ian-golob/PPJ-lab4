@@ -202,13 +202,13 @@ public class RuleLoader {
                 node.setProperty("kod", postfiks_izraz.getProperty("kod"));
             });
 
-            /*
+
             addRule("<postfiks_izraz>", List.of(
                     "<postfiks_izraz>",
                     "L_ZAGRADA",
                     "<lista_argumenata>",
                     "D_ZAGRADA"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
 
                 Node postfiks_izraz = (Node) node.getChild(0);
                 Node lista_argumenata = (Node) node.getChild(2);
@@ -221,7 +221,6 @@ public class RuleLoader {
                 }
 
                 FunctionType functionType = (FunctionType) postfiks_izraz.getProperty("tip");
-
                 List<DataType> tipovi = (List<DataType>) lista_argumenata.getProperty("tipovi");
 
                 if(tipovi.size() != functionType.getParameters().size()){
@@ -235,17 +234,27 @@ public class RuleLoader {
                     if(!argTip.implicitlyCastableTo(paramTip)){
                         throw new SemanticException();
                     }
+                }
+
+                String code = (String) lista_argumenata.getProperty("kod");
+
+                if (((List<DataType>) lista_argumenata.getProperty("tipovi")).size() == 1){
+                    code += generateSUB(R7, 4, R7) + generateADD(R7, 0, R5) + generateSTORE(R6, R5.name());
+                    code += (String) postfiks_izraz.getProperty("kod") + generateADD(R7, 4, R7);
+                }
+                else {
 
                 }
 
+                node.setProperty("kod", code);
                 node.setProperty("tip", functionType.getReturnType());
                 node.setProperty("l-izraz", Boolean.FALSE);
             });
-
+            /*
             addRule("<postfiks_izraz>", List.of(
                     "<postfiks_izraz>",
                     "OP_INC"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
 
                 Node postfiks_izraz = (Node) node.getChild(0);
                 checker.run(postfiks_izraz);
@@ -260,7 +269,7 @@ public class RuleLoader {
             addRule("<postfiks_izraz>", List.of(
                     "<postfiks_izraz>",
                     "OP_DEC"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
 
                 Node postfiks_izraz = (Node) node.getChild(0);
                 checker.run(postfiks_izraz);
@@ -276,10 +285,10 @@ public class RuleLoader {
 
         // <lista_argumenata>
         {
-            /*
+
             addRule("<lista_argumenata>", List.of(
                     "<izraz_pridruzivanja>"
-            ), (node, checker, scoper) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node izraz_pridruzivanja = (Node) node.getChild(0);
                 checker.run(izraz_pridruzivanja);
 
@@ -287,9 +296,9 @@ public class RuleLoader {
                 tipovi.add((DataType) izraz_pridruzivanja.getProperty("tip"));
 
                 node.setProperty("tipovi", tipovi);
-
+                node.setProperty("kod", izraz_pridruzivanja.getProperty("kod"));
             });
-
+            /*
             addRule("<lista_argumenata>", List.of(
                     "<lista_argumenata>",
                     "ZAREZ",
@@ -468,11 +477,11 @@ public class RuleLoader {
                 node.setProperty("tip", specifikator_tipa.getProperty("tip"));
             });
 
-            /*
+
             addRule("<ime_tipa>", List.of(
                     "KR_CONST",
                     "<specifikator_tipa>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node specifikator_tipa = (Node) node.getChild(1);
 
                 checker.run(specifikator_tipa);
@@ -481,18 +490,17 @@ public class RuleLoader {
 
                 node.setProperty("tip", constOf((DataType) specifikator_tipa.getProperty("tip")));
             });
-            */
+
         }
 
         // <specifikator_tipa>
         {
-            /*
+
             addRule("<specifikator_tipa>", List.of(
                     "KR_VOID"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 node.setProperty("tip", VOID);
             });
-            */
 
             addRule("<specifikator_tipa>", List.of(
                     "KR_CHAR"
@@ -1693,7 +1701,7 @@ public class RuleLoader {
 
                 node.setProperty("kod", code);
             });
-            /*
+
             addRule("<definicija_funkcije>", List.of(
                     "<ime_tipa>",
                     "IDN",
@@ -1701,7 +1709,7 @@ public class RuleLoader {
                     "<lista_parametara>",
                     "D_ZAGRADA",
                     "<slozena_naredba>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node ime_tipa = (Node) node.getChild(0);
                 Leaf IDN = (Leaf) node.getChild(1);
                 Node lista_parametara = (Node) node.getChild(3);
@@ -1709,23 +1717,7 @@ public class RuleLoader {
 
                 checker.run(ime_tipa);
 
-                if (NumericType.isConst((DataType) ime_tipa.getProperty("tip"))) {
-                    throw new SemanticException();
-                }
-
                 checker.run(lista_parametara);
-
-                if (scope.isDeclaredGlobally(IDN.getSourceText())) {
-                    Function declaredFunction = scope.getGloballyDeclaredFunction(IDN.getSourceText());
-
-                    if (!declaredFunction.getReturnType().equals(
-                            new FunctionType((DataType) ime_tipa.getProperty("tip"),
-                                    (DataType) lista_parametara.getProperty("tipovi")))) {
-                        throw new SemanticException();
-                    }
-
-                }
-
 
                 List<DataType> lista_tipova = (List<DataType>) lista_parametara.getProperty("tipovi");
                 List<String> lista_imena_tipova = (List<String>) lista_parametara.getProperty("imena");
@@ -1733,27 +1725,34 @@ public class RuleLoader {
 
                 scope.startFunctionDefinition(new Function(IDN.getSourceText(), functionType));
 
-                for (int i = 0; i < lista_tipova.size(); i++) {
+                for (int i = 0; i < lista_imena_tipova.size(); i++) {
+                    stack.addVariable(lista_imena_tipova.get(i));
                     scope.declareVariable(new Variable(lista_imena_tipova.get(i),
                             lista_tipova.get(i),
                             false,
                             false
                     ));
                 }
+                stack.addReturnAddress();
 
                 checker.run(slozena_naredba);
+                String code = (String) slozena_naredba.getProperty("kod");
+
+                writer.defineFunction(IDN.getSourceText(), code);
+                node.setProperty("kod", code);
+                stack.removeStackEntries(lista_tipova.size() + 1);
 
                 scope.endFunctionDefinition();
             });
-            */
+
         }
 
         // <lista_parametara>
         {
-            /*
+
             addRule("<lista_parametara>", List.of(
                     "<deklaracija_parametra>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node deklaracija_parametra = (Node) node.getChild(0);
 
                 checker.run(deklaracija_parametra);
@@ -1771,7 +1770,7 @@ public class RuleLoader {
                     "<lista_parametara>",
                     "ZAREZ",
                     "<deklaracija_parametra>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node lista_parametara = (Node) node.getChild(0);
                 Node deklaracija_parametra = (Node) node.getChild(2);
 
@@ -1789,16 +1788,16 @@ public class RuleLoader {
                 node.setProperty("tipovi", tipovi);
                 node.setProperty("imena", imena);
             });
-            */
+
         }
 
         // <deklaracija_parametra>
         {
-            /*
+
             addRule("<deklaracija_parametra>", List.of(
                     "<ime_tipa>",
                     "IDN"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node ime_tipa = (Node) node.getChild(0);
                 Leaf idn = (Leaf) node.getChild(1);
 
@@ -1815,7 +1814,7 @@ public class RuleLoader {
                     "IDN",
                     "L_UGL_ZAGRADA",
                     "D_UGL_ZAGRADA"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node ime_tipa = (Node) node.getChild(0);
                 Leaf idn = (Leaf) node.getChild(1);
 
@@ -1826,7 +1825,6 @@ public class RuleLoader {
                 node.setProperty("tip", ArrayType.of((DataType) ime_tipa.getProperty("tip")));
                 node.setProperty("ime", idn.getSourceText());
             });
-            */
         }
 
         // <lista_deklaracija>

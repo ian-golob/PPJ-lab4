@@ -268,7 +268,7 @@ public class RuleLoader {
                 node.setProperty("tip", functionType.getReturnType());
                 node.setProperty("l-izraz", Boolean.FALSE);
             });
-            /*
+
             addRule("<postfiks_izraz>", List.of(
                     "<postfiks_izraz>",
                     "OP_INC"
@@ -280,8 +280,16 @@ public class RuleLoader {
                 if (!(Boolean) postfiks_izraz.getProperty("l-izraz").equals(Boolean.TRUE)) throw new SemanticException();
                 if (postfiks_izraz.getProperty("tip") != INT) throw new SemanticException();
 
+                String variableName = (String) postfiks_izraz.getProperty("variableName");
+                String code = stack.generateLOADVariableAddress(variableName, R5) +
+                        generateLOAD(R5.name(), R6) +
+                        generateADD(R6, 1, R4) +
+                        generateSTORE(R4, R5.name());
+                node.setProperty("variableName", variableName);
+
                 node.setProperty("tip", INT);
                 node.setProperty("l-izraz", Boolean.FALSE);
+                node.setProperty("kod", code);
             });
 
             addRule("<postfiks_izraz>", List.of(
@@ -295,10 +303,17 @@ public class RuleLoader {
                 if (!(Boolean) postfiks_izraz.getProperty("l-izraz").equals(Boolean.TRUE)) throw new SemanticException();
                 if (postfiks_izraz.getProperty("tip") != INT) throw new SemanticException();
 
+                String variableName = (String) postfiks_izraz.getProperty("variableName");
+                String code = stack.generateLOADVariableAddress(variableName, R5) +
+                        generateLOAD(R5.name(), R6) +
+                        generateSUB(R6, 1, R4) +
+                        generateSTORE(R4, R5.name());
+                node.setProperty("variableName", variableName);
+
                 node.setProperty("tip", INT);
                 node.setProperty("l-izraz", Boolean.FALSE);
+                node.setProperty("kod", code);
             });
-            */
         }
 
         // <lista_argumenata>
@@ -355,17 +370,20 @@ public class RuleLoader {
 
                 checker.run(postfiks_izraz);
 
+                if(postfiks_izraz.hasProperty("variableName")){
+                    node.setProperty("variableName", postfiks_izraz.getProperty("variableName"));
+                }
+
                 node.setProperty("tip", postfiks_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", postfiks_izraz.getProperty("l-izraz"));
                 node.setProperty("kod", postfiks_izraz.getProperty("kod"));
             });
 
-            /*
 
             addRule("<unarni_izraz>", List.of(
                     "OP_INC",
                     "<unarni_izraz>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node unarni_izraz = (Node) node.getChild(1);
 
                 checker.run(unarni_izraz);
@@ -374,14 +392,22 @@ public class RuleLoader {
                         || !((DataType) unarni_izraz.getProperty("tip")).implicitlyCastableTo(INT))
                     throw new SemanticException();
 
+                String variableName = (String) unarni_izraz.getProperty("variableName");
+                String code = stack.generateLOADVariableAddress(variableName, R5) +
+                        generateLOAD(R5.name(), R6) +
+                        generateADD(R6, 1, R6) +
+                        generateSTORE(R6, R5.name());
+                node.setProperty("variableName", variableName);
+
                 node.setProperty("tip", INT);
                 node.setProperty("l-izraz", Boolean.FALSE);
+                node.setProperty("kod", code);
             });
 
             addRule("<unarni_izraz>", List.of(
                     "OP_DEC",
                     "<unarni_izraz>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node unarni_izraz = (Node) node.getChild(1);
 
                 checker.run(unarni_izraz);
@@ -390,10 +416,18 @@ public class RuleLoader {
                         || !((DataType) unarni_izraz.getProperty("tip")).implicitlyCastableTo(INT))
                     throw new SemanticException();
 
+                String variableName = (String) unarni_izraz.getProperty("variableName");
+                String code = stack.generateLOADVariableAddress(variableName, R5) +
+                        generateLOAD(R5.name(), R6) +
+                        generateSUB(R6, 1, R6) +
+                        generateSTORE(R6, R5.name());
+                node.setProperty("variableName", variableName);
+
                 node.setProperty("tip", INT);
                 node.setProperty("l-izraz", Boolean.FALSE);
+                node.setProperty("kod", code);
             });
-            */
+
             addRule("<unarni_izraz>", List.of(
                     "<unarni_operator>",
                     "<cast_izraz>"
@@ -419,8 +453,16 @@ public class RuleLoader {
                         code = code + generateSUB(R0, R6, R6);
                         break;
                     case "OP_TILDA":
+                        code = code + generateXOR(R6, -1, R6);
+                        break;
                     case "OP_NEG":
-                        throw new UnsupportedOperationException();
+                        String lineAddress = generateLineAddress();
+                        code = code + generateCMP(R6, 0);
+                        code = code + generateJP_EQ(lineAddress);
+                        code = code + generateMOVE(1, R6);
+                        code = code + lineAddress;
+                        code = code + generateXOR(R6, 1, R6);
+                        break;
                 }
 
                 node.setProperty("kod", code);
@@ -1167,17 +1209,50 @@ public class RuleLoader {
                 node.setProperty("kod", bin_ili_izraz.getProperty("kod"));
             });
 
-            /*
             addRule("<log_i_izraz>", List.of(
                     "<log_i_izraz>",
                     "OP_I",
                     "<bin_ili_izraz>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node log_i_izraz = (Node) node.getChild(0);
                 Node bin_ili_izraz = (Node) node.getChild(2);
 
                 checker.run(log_i_izraz);
+
+                String tmpVariable1 = stack.addTmpVariable();
+
+                String skipLine = generateLineAddress();
+
+                String code = "";
+                code = code + log_i_izraz.getProperty("kod");
+                code = code + generateSUB(R7, Constants.WORD_LENGTH, R7);
+                code = code + stack.generateLOADVariableAddress(tmpVariable1, R5);
+                code = code + generateSTORE(R6, R5.name());
+
+                code = code + generateCMP(R6, 0);
+                code = code + generateJP_EQ(skipLine);
+
                 checker.run(bin_ili_izraz);
+
+                code = code + bin_ili_izraz.getProperty("kod");
+                code = code + stack.generateLOADVariableAddress(tmpVariable1, R5);
+                code = code + generateLOAD(R5.name(), R5);
+
+                String lineAddress1 = generateLineAddress();
+                code = code + generateCMP(R5, 0);
+                code = code + generateJP_EQ(lineAddress1);
+                code = code + generateMOVE(1, R5);
+                code = code + lineAddress1;
+
+                String lineAddress2 = generateLineAddress();
+                code = code + generateCMP(R6, 0);
+                code = code + generateJP_EQ(lineAddress2);
+                code = code + generateMOVE(1, R6);
+                code = code + lineAddress2;
+
+                code = code + generateAND(R5, R6, R6);
+
+                code = code + skipLine;
 
                 if (!((DataType) log_i_izraz.getProperty("tip")).implicitlyCastableTo(INT) ||
                         !((DataType) bin_ili_izraz.getProperty("tip")).implicitlyCastableTo(INT))
@@ -1185,8 +1260,9 @@ public class RuleLoader {
 
                 node.setProperty("tip", INT);
                 node.setProperty("l-izraz", Boolean.FALSE);
+
+                node.setProperty("kod", code);
             });
-            */
         }
 
         // <log_ili_izraz>
@@ -1203,17 +1279,50 @@ public class RuleLoader {
                 node.setProperty("kod", log_i_izraz.getProperty("kod"));
             });
 
-            /*
             addRule("<log_ili_izraz>", List.of(
                     "<log_ili_izraz>",
                     "OP_ILI",
                     "<log_i_izraz>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node log_ili_izraz = (Node) node.getChild(0);
                 Node log_i_izraz = (Node) node.getChild(2);
 
                 checker.run(log_ili_izraz);
+
+                String tmpVariable1 = stack.addTmpVariable();
+
+                String skipLine = generateLineAddress();
+
+                String code = "";
+                code = code + log_ili_izraz.getProperty("kod");
+                code = code + generateSUB(R7, Constants.WORD_LENGTH, R7);
+                code = code + stack.generateLOADVariableAddress(tmpVariable1, R5);
+                code = code + generateSTORE(R6, R5.name());
+
+                code = code + generateCMP(R6, 0);
+                code = code + generateJP_NE(skipLine);
+
                 checker.run(log_i_izraz);
+
+                code = code + log_i_izraz.getProperty("kod");
+                code = code + stack.generateLOADVariableAddress(tmpVariable1, R5);
+                code = code + generateLOAD(R5.name(), R5);
+
+                String lineAddress1 = generateLineAddress();
+                code = code + generateCMP(R5, 0);
+                code = code + generateJP_EQ(lineAddress1);
+                code = code + generateMOVE(1, R5);
+                code = code + lineAddress1;
+
+                String lineAddress2 = generateLineAddress();
+                code = code + generateCMP(R6, 0);
+                code = code + generateJP_EQ(lineAddress2);
+                code = code + generateMOVE(1, R6);
+                code = code + lineAddress2;
+
+                code = code + generateOR(R5, R6, R6);
+
+                code = code + skipLine;
 
                 if (!((DataType) log_i_izraz.getProperty("tip")).implicitlyCastableTo(INT) ||
                         !((DataType) log_ili_izraz.getProperty("tip")).implicitlyCastableTo(INT))
@@ -1221,8 +1330,8 @@ public class RuleLoader {
 
                 node.setProperty("tip", INT);
                 node.setProperty("l-izraz", Boolean.FALSE);
+                node.setProperty("kod", code);
             });
-            */
         }
 
         // <izraz_pridruzivanja>
@@ -1289,22 +1398,31 @@ public class RuleLoader {
                 node.setProperty("kod", code);
             });
 
-            /*
             addRule("<izraz>", List.of(
                     "<izraz>",
                     "ZAREZ",
                     "<izraz_pridruzivanja>"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 Node izraz = (Node) node.getChild(0);
                 Node izraz_pridruzivanja = (Node) node.getChild(2);
 
+                stack.defineTmpScope();
+
                 checker.run(izraz);
+
+                int localVariableOffset = stack.getVariableScopeOffset();
+                String code = izraz.getProperty("kod") +
+                        generateADD(R7, localVariableOffset, R7);
+                stack.deleteLastTmpScope();
+
                 checker.run(izraz_pridruzivanja);
+
+                code = code + izraz_pridruzivanja.getProperty("kod");
 
                 node.setProperty("tip", izraz_pridruzivanja.getProperty("tip"));
                 node.setProperty("l-izraz", Boolean.FALSE);
+                node.setProperty("kod", code);
             });
-            */
         }
 
         // <slozena_naredba>

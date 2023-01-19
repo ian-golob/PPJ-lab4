@@ -44,6 +44,10 @@ public class CodeGenerator {
         return " JP_EQ " + to + "\n";
     }
 
+    public static String generateJP_NE(String to){
+        return " JP_NE " + to + "\n";
+    }
+
     public static String generateJP_SLT(String to){
         return " JP_SLT " + to + "\n";
     }
@@ -94,8 +98,16 @@ public class CodeGenerator {
         return " AND " + r1.name() + ", " + r2.name() + ", " + r3.name() + "\n";
     }
 
+    public static String generateAND(Register r1, int number, Register r3){
+        return " AND " + r1.name() + ", " + numberToHex(number) + ", " + r3.name() + "\n";
+    }
+
     public static String generateXOR(Register r1, Register r2, Register r3){
         return " XOR " + r1.name() + ", " + r2.name() + ", " + r3.name() + "\n";
+    }
+
+    public static String generateXOR(Register r1, int number, Register r3){
+        return " XOR " + r1.name() + ", " + numberToHex(number) + ", " + r3.name() + "\n";
     }
 
 

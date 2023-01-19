@@ -239,6 +239,17 @@ public class RuleLoader {
                 List<String> codes = (List<String>) lista_argumenata.getProperty("kodovi");
 
                 String code = "";
+                for(int i = 0; i < codes.size(); i++){
+                    code += codes.get(i) +
+                            generateSUB(R7, 4, R7) +
+                            generateADD(R7, 0, R5) +
+                            generateSTORE(R6, R5.name());
+                }
+
+                code += (String) postfiks_izraz.getProperty("kod") +
+                        generateADD(R7, 4 * codes.size(), R7);
+
+                /*
                 if (((List<DataType>) lista_argumenata.getProperty("tipovi")).size() == 1){
                     code += codes.get(0) +
                             generateSUB(R7, 4, R7) +
@@ -250,6 +261,8 @@ public class RuleLoader {
                 else {
                     throw new UnsupportedOperationException();
                 }
+
+                 */
 
                 node.setProperty("kod", code);
                 node.setProperty("tip", functionType.getReturnType());
@@ -295,6 +308,7 @@ public class RuleLoader {
                     "<izraz_pridruzivanja>"
             ), (node, checker, scope, writer, stack) -> {
                 Node izraz_pridruzivanja = (Node) node.getChild(0);
+
                 checker.run(izraz_pridruzivanja);
 
                 List<DataType> tipovi = new ArrayList<>();
@@ -306,7 +320,6 @@ public class RuleLoader {
                 node.setProperty("kodovi", new ArrayList<>(List.of(code)));
             });
 
-            /*
             addRule("<lista_argumenata>", List.of(
                     "<lista_argumenata>",
                     "ZAREZ",
@@ -331,8 +344,6 @@ public class RuleLoader {
 
                 node.setProperty("kodovi", codes);
             });
-
-             */
         }
 
         // <unarni_izraz>

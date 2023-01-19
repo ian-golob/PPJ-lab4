@@ -70,22 +70,23 @@ public class IntegrationTest {
 
         List<String> args = new ArrayList<>();
 
+        /*
         for(File file: exampleDirectories1112){
             args.add("test-examples/11-12-test-examples/" +file.getName());
         }
-/*
         for(File file: officialExamplesDirectories){
             args.add("test-examples/official-test-examples/" +file.getName());
         }
+
 
         for(File file: exampleDirectories2021){
             args.add("test-examples/20-21-test-examples/" +file.getName());
         }
 
+         */
         for(File file: exampleDirectories2122) {
             args.add("test-examples/21-22-test-examples/" + file.getName());
         }
-*/
         return args.stream().map(Arguments::of);
     }
 

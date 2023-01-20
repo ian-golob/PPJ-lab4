@@ -110,6 +110,17 @@ public class CodeGenerator {
         return " XOR " + r1.name() + ", " + numberToHex(number) + ", " + r3.name() + "\n";
     }
 
+    public static String generateMUL(){
+        return " CALL MNOZI\n";
+    }
+
+    public static String generateDIV(){
+        return " CALL DIJELI\n";
+    }
+
+    public static String generateMOD(){
+        return " CALL OSTATAK\n";
+    }
 
     private static String numberToHex(int number){
         return "0" + Integer.toHexString(number);

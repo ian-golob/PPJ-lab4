@@ -64,6 +64,26 @@ public class GlobalVariableScope implements VariableScope {
     }
 
     @Override
+    public void addBreakAddress(String name) {
+
+    }
+
+    @Override
+    public void addContinueAddress(String name) {
+
+    }
+
+    @Override
+    public String getBreakAddress() {
+        return null;
+    }
+
+    @Override
+    public String getContinueAddress() {
+        return null;
+    }
+
+    @Override
     public boolean functionIsDeclaredLocally(String functionName) {
         return valueMap.containsKey(functionName) && valueMap.get(functionName) instanceof Function;
     }

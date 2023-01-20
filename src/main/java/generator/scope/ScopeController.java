@@ -97,6 +97,21 @@ public class ScopeController {
         return loopCounter > 0;
     }
 
+    public void addBreakAddress(String name){
+        currentVariableScope.addBreakAddress(name);
+    }
+
+    public void addContinueAddress(String name){
+        currentVariableScope.addContinueAddress(name);
+    }
+
+    public String getBreakAddress(){
+        return currentVariableScope.getBreakAddress();
+    }
+
+    public String getContinueAddress(){
+        return currentVariableScope.getContinueAddress();
+    }
 
     public void requireDeclared(String sourceText) throws SemanticException {
         if(!currentVariableScope.isDeclared(sourceText)) {

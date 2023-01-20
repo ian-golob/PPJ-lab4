@@ -22,6 +22,14 @@ public interface VariableScope {
 
     ScopeElement get(String name);
 
+    public void addBreakAddress(String name);
+
+    public void addContinueAddress(String name);
+
+    public String getBreakAddress();
+
+    public String getContinueAddress();
+
     boolean functionIsDeclaredLocally(String functionName);
 
     boolean isDeclaredGlobally(String functionName);

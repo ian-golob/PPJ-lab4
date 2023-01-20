@@ -1,19 +1,20 @@
 package generator.scope;
 
-import generator.semantic.SemanticException;
 import generator.model.function.Function;
 import generator.model.variable.Variable;
+import generator.semantic.SemanticException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class LocalVariableScope implements VariableScope {
 
     private final Map<String, ScopeElement> valueMap = new HashMap<>();
 
     private final VariableScope outerScope;
+
+    public String breakAddress, continueAddress;
 
     public LocalVariableScope(VariableScope outerScope) {
         this.outerScope = outerScope;
@@ -87,6 +88,26 @@ public class LocalVariableScope implements VariableScope {
             return valueMap.get(name);
         }
         return outerScope.get(name);
+    }
+
+    @Override
+    public void addBreakAddress(String name) {
+        breakAddress = name;
+    }
+
+    @Override
+    public void addContinueAddress(String name) {
+        continueAddress = name;
+    }
+
+    @Override
+    public String getBreakAddress() {
+        return breakAddress;
+    }
+
+    @Override
+    public String getContinueAddress() {
+        return continueAddress;
     }
 
     @Override

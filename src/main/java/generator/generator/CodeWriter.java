@@ -5,10 +5,9 @@ import generator.scope.ScopeController;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+
+import static generator.generator.Constants.*;
 
 public class CodeWriter {
 
@@ -38,11 +37,11 @@ public class CodeWriter {
 
     public void writeHeader() {
         String globalVariableDefinitionsString = String.join("", globalVariableDefinitions);
-
+        String helperFunctions = MULTIPLICATION + '\n' + DIVISION + '\n' + MODULO;
         write(" MOVE 40000, R7\n" +
                 globalVariableDefinitionsString +
                 CodeGenerator.generateFunctionCALL("main") +
-                " HALT\n\n");
+                " HALT\n\n" + helperFunctions + "\n");
     }
 
     public void writeFunctions(){

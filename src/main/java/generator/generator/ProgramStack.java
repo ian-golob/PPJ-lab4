@@ -47,8 +47,9 @@ public class ProgramStack {
     }
 
 
+
     private enum StackEntryType {
-        VARIABLE, F_RETURN, SCOPE_START, ARRAY_START
+        VARIABLE, F_RETURN, SCOPE_START, ARRAY_START, ARRAY_ADDRESS
     }
 
     private static class StackEntry {
@@ -75,6 +76,10 @@ public class ProgramStack {
         stack.add(new StackEntry(variableName, StackEntryType.ARRAY_START));
     }
 
+    public void addArrayAddress(String variableName) {
+        stack.add(new StackEntry(variableName, StackEntryType.ARRAY_ADDRESS));
+    }
+
     public void addReturnAddress() {
         stack.add(new StackEntry("$returnAddress", StackEntryType.F_RETURN));
     }
@@ -93,7 +98,12 @@ public class ProgramStack {
 
             if(stack.get(i).name.equals(variableName)){
 
-                return  CodeGenerator.generateADD(R7, adjustment * Constants.WORD_LENGTH, to);
+                if(stack.get(i).type == StackEntryType.ARRAY_ADDRESS){
+                    return  CodeGenerator.generateADD(R7, adjustment * Constants.WORD_LENGTH, to) +
+                            CodeGenerator.generateLOAD(to.name(), to);
+                } else {
+                    return  CodeGenerator.generateADD(R7, adjustment * Constants.WORD_LENGTH, to);
+                }
 
             } else if(stack.get(i).type != StackEntryType.SCOPE_START){
 

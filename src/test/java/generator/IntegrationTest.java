@@ -1,6 +1,8 @@
 package generator;
 
 import generator.semantic.SemanticException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -18,6 +20,7 @@ public class IntegrationTest {
 
     @ParameterizedTest
     @MethodSource("provideTestDirectoryNames")
+    @Timeout(value = 10)
     public void integrationTest(String directoryName) throws IOException, SemanticException {
         String pathPrefix = "./src/test/resources/" + directoryName;
 

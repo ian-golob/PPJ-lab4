@@ -260,6 +260,8 @@ public class RuleLoader {
                 Node lista_argumenata = (Node) node.getChild(2);
 
                 checker.run(postfiks_izraz);
+
+                stack.defineTmpScope();
                 checker.run(lista_argumenata);
 
                 if(!(postfiks_izraz.getProperty("tip") instanceof FunctionType)){
@@ -292,8 +294,15 @@ public class RuleLoader {
                             generateSTORE(R6, R5.name());
                 }
 
+                /*
                 code += (String) postfiks_izraz.getProperty("kod") +
                         generateADD(R7, 4 * codes.size(), R7);
+
+                 */
+                int localVariableOffset = stack.getVariableScopeOffset();
+                code = code + postfiks_izraz.getProperty("kod") +
+                        generateADD(R7, localVariableOffset, R7);
+                stack.deleteLastTmpScope();
 
                 node.setProperty("kod", code);
                 node.setProperty("tip", functionType.getReturnType());
@@ -357,6 +366,8 @@ public class RuleLoader {
 
                 checker.run(izraz_pridruzivanja);
 
+                stack.addTmpVariable();
+
                 List<DataType> tipovi = new ArrayList<>();
                 tipovi.add((DataType) izraz_pridruzivanja.getProperty("tip"));
 
@@ -375,8 +386,11 @@ public class RuleLoader {
                 Node lista_argumenata = (Node) node.getChild(0);
                 Node izraz_pridruzivanja = (Node) node.getChild(2);
 
-                checker.run(izraz_pridruzivanja);
                 checker.run(lista_argumenata);
+
+                checker.run(izraz_pridruzivanja);
+
+                stack.addTmpVariable();
 
                 List<DataType> tipovi = (List<DataType>) lista_argumenata.getProperty("tipovi");
                 tipovi.add((DataType) izraz_pridruzivanja.getProperty("tip"));
@@ -1447,8 +1461,6 @@ public class RuleLoader {
                     code = code + stack.generateLOADVariableAddress(tmpVariable, R5);
                     code = code + generateSTORE(R6, R5.name());
 
-                } else {
-
                 }
 
                 checker.run(izraz_pridruzivanja);
@@ -1944,7 +1956,7 @@ public class RuleLoader {
 
                 scope.endFunctionDefinition();
 
-                String code = (String) slozena_naredba.getProperty("kod");
+                String code = (String) slozena_naredba.getProperty("kod") + generateRET();
 
                 writer.defineFunction(IDN.getSourceText(), code);
 
@@ -1975,13 +1987,12 @@ public class RuleLoader {
                 scope.startFunctionDefinition(new Function(IDN.getSourceText(), functionType));
 
                 for (int i = 0; i < lista_imena_tipova.size(); i++) {
-                    stack.addVariable(lista_imena_tipova.get(i));
-
                     DataType type = lista_tipova.get(i);
 
                     if(type instanceof ArrayType){
-                        //TODO
-                        throw new UnsupportedOperationException();
+                        stack.addArrayAddress(lista_imena_tipova.get(i));
+                    } else {
+                        stack.addVariable(lista_imena_tipova.get(i));
                     }
 
                     scope.declareVariable(new Variable(lista_imena_tipova.get(i),
@@ -1995,7 +2006,7 @@ public class RuleLoader {
                 stack.defineTmpScope();
 
                 checker.run(slozena_naredba);
-                String code = (String) slozena_naredba.getProperty("kod");
+                String code = (String) slozena_naredba.getProperty("kod") + generateRET();
 
                 stack.deleteLastTmpScope();
 

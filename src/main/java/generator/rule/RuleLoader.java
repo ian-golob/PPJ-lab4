@@ -1803,8 +1803,8 @@ public class RuleLoader {
                 String lineAddress2 = generateLineAddress();
 
                 scope.enterLoop();
-                scope.addBreakAddress(lineAddress1);
-                scope.addContinueAddress(lineAddress2);
+                scope.addBreakAddress(lineAddress2);
+                scope.addContinueAddress(lineAddress1);
 
                 checker.run(naredba);
                 String code = (String) naredba.getProperty("kod");
@@ -1846,8 +1846,8 @@ public class RuleLoader {
                 String lineAddress2 = generateLineAddress();
 
                 scope.enterLoop();
-                scope.addBreakAddress(lineAddress1);
-                scope.addContinueAddress(lineAddress2);
+                scope.addBreakAddress(lineAddress2);
+                scope.addContinueAddress(lineAddress1);
 
                 checker.run(naredba);
 
@@ -1892,8 +1892,8 @@ public class RuleLoader {
                 String lineAddress1 = generateLineAddress();
                 String lineAddress2 = generateLineAddress();
                 scope.enterLoop();
-                scope.addBreakAddress(lineAddress1);
-                scope.addContinueAddress(lineAddress2);
+                scope.addBreakAddress(lineAddress2);
+                scope.addContinueAddress(lineAddress1);
 
                 checker.run(naredba);
 

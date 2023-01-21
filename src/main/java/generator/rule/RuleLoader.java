@@ -1530,7 +1530,6 @@ public class RuleLoader {
                 node.setProperty("tip", postfiks_izraz.getProperty("tip"));
                 node.setProperty("l-izraz", Boolean.FALSE);
 
-
                 node.setProperty("kod", code);
             });
         }
@@ -1700,13 +1699,13 @@ public class RuleLoader {
 
         // <izraz_naredba>
         {
-            /*
             addRule("<izraz_naredba>", List.of(
                     "TOCKAZAREZ"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
                 node.setProperty("tip", INT);
+                node.setProperty("kod", "");
             });
-            */
+
             addRule("<izraz_naredba>", List.of(
                     "<izraz>",
                     "TOCKAZAREZ"
@@ -1943,7 +1942,11 @@ public class RuleLoader {
                     "KR_RETURN",
                     "TOCKAZAREZ"
             ), (node, checker, scope, writer, stack) -> {
-                node.setProperty("kod", generateRET());
+                int localVariableOffset = stack.getVariableScopeOffset();
+                String code = generateADD(R7, localVariableOffset, R7) +
+                        generateRET();
+
+                node.setProperty("kod", code);
                 Function currentFunction = scope.getCurrentFunction();
                 if (currentFunction.getReturnType() != VOID) throw new SemanticException();
             });
@@ -2061,7 +2064,9 @@ public class RuleLoader {
 
                 scope.startFunctionDefinition(new Function(IDN.getSourceText(), functionType));
 
+                stack.defineTmpScope();
                 checker.run(slozena_naredba);
+                stack.deleteLastTmpScope();
 
                 scope.endFunctionDefinition();
 
@@ -2395,7 +2400,7 @@ public class RuleLoader {
 
                 scope.declareVariable(variable);
 
-                if(!scope.variableIsGlobal(variable.getName())){
+                if(!scope.variableIsOnlyGlobal(variable.getName())){
                     stack.addVariable(variable.getName());
                     node.setProperty("kod", generateSUB(R7, 4, R7));
                 } else {
@@ -2546,12 +2551,12 @@ public class RuleLoader {
                 List<String> codes = (List<String>) lista_izraza_pridruzivanja.getProperty("kodovi");
 
                 Variable variable = (Variable) node.getProperty("variable");
-                String code = stack.generateLOADVariableAddress(variable.getName(), R5);
+                String code = stack.generateLOADVariableAddress(variable.getName(), R3);
 
                 for(int i = 0; i < codes.size(); i++){
                     code = code + codes.get(i);
-                    code = code + generateSTORE(R6, R5.name());
-                    code = code + generateADD(R5, 4, R5);
+                    code = code + generateSTORE(R6, R3.name());
+                    code = code + generateADD(R3, 4, R3);
                 }
 
                 node.setProperty("br-elem", lista_izraza_pridruzivanja.getProperty("br-elem"));

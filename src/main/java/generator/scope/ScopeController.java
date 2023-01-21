@@ -150,4 +150,8 @@ public class ScopeController {
     public boolean variableIsGlobal(String name) {
         return currentVariableScope.variableIsGlobal(name);
     }
+
+    public boolean variableIsOnlyGlobal(String name) {
+        return currentVariableScope.variableIsOnlyGlobal(name);
+    }
 }

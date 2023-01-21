@@ -31,3 +31,5 @@ bin/
 /src/test/resources/**/*.my
 /src/test/resources/**/*.my.out
 /src/test/resources/**/*.my.err
+
+*.zip

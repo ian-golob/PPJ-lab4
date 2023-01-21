@@ -1700,13 +1700,14 @@ public class RuleLoader {
 
         // <izraz_naredba>
         {
-            /*
+
             addRule("<izraz_naredba>", List.of(
                     "TOCKAZAREZ"
-            ), (node, checker, scope) -> {
+            ), (node, checker, scope, writer, stack) -> {
+                node.setProperty("kod", "");
                 node.setProperty("tip", INT);
             });
-            */
+
             addRule("<izraz_naredba>", List.of(
                     "<izraz>",
                     "TOCKAZAREZ"

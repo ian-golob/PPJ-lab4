@@ -36,6 +36,8 @@ public interface VariableScope {
 
     boolean variableIsGlobal(String variableName);
 
+    boolean variableIsOnlyGlobal(String variableName);
+
     Function getGloballyDeclaredFunction(String functionName) throws SemanticException;
 
     List<Variable> getAllGlobalVariables();

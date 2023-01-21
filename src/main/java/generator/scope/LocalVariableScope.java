@@ -126,6 +126,14 @@ public class LocalVariableScope implements VariableScope {
     }
 
     @Override
+    public boolean variableIsOnlyGlobal(String variableName) {
+        if(valueMap.containsKey(variableName) && valueMap.get(variableName) instanceof Variable){
+            return false;
+        }
+        return outerScope.variableIsOnlyGlobal(variableName);
+    }
+
+    @Override
     public Function getGloballyDeclaredFunction(String functionName) throws SemanticException {
         return outerScope.getGloballyDeclaredFunction(functionName);
     }

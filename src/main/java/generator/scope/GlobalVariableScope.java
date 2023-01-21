@@ -99,6 +99,11 @@ public class GlobalVariableScope implements VariableScope {
     }
 
     @Override
+    public boolean variableIsOnlyGlobal(String variableName) {
+        return variableIsGlobal(variableName);
+    }
+
+    @Override
     public Function getGloballyDeclaredFunction(String functionName) throws SemanticException {
         if(valueMap.containsKey(functionName) && !(valueMap.get(functionName) instanceof Function)){
             throw new SemanticException();

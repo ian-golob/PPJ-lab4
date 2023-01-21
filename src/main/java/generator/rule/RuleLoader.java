@@ -1856,12 +1856,16 @@ public class RuleLoader {
                 code = izrazCode + lineAddress1 + code;
 
                 izrazCode = (String) izraz_naredba2.getProperty("kod");
+                if (izrazCode.equals("")){
+                    code = code + generateJP(lineAddress1) + lineAddress2 + "\n";
+                } else {
+                    code = code + izrazCode +
+                            generateCMP(R6, 0) +
+                            generateJP_EQ(lineAddress2) +
+                            generateJP(lineAddress1) +
+                            lineAddress2 + "\n";
+                }
 
-                code = code + izrazCode +
-                        generateCMP(R6, 0) +
-                        generateJP_EQ(lineAddress2) +
-                        generateJP(lineAddress1) +
-                        lineAddress2 + "\n";
 
                 scope.exitLoop();
 
@@ -1899,16 +1903,20 @@ public class RuleLoader {
                 String code = (String) naredba.getProperty("kod");
                 String izrazCode = (String) izraz_naredba1.getProperty("kod");
 
-                code = izrazCode + lineAddress1 + code;
+                code = izrazCode + lineAddress1 + code + izraz.getProperty("kod");
 
                 izrazCode = (String) izraz_naredba2.getProperty("kod");
 
-
-                code = code + izraz.getProperty("kod") + izrazCode +
-                        generateCMP(R6, 0) +
-                        generateJP_EQ(lineAddress2) +
-                        generateJP(lineAddress1) +
-                        lineAddress2 + "\n";
+                if (izrazCode.equals("")){
+                    code = code + generateJP(lineAddress1) + lineAddress2 + "\n";
+                }
+                else {
+                    code = code + izrazCode +
+                            generateCMP(R6, 0) +
+                            generateJP_EQ(lineAddress2) +
+                            generateJP(lineAddress1) +
+                            lineAddress2 + "\n";
+                }
 
                 scope.exitLoop();
 

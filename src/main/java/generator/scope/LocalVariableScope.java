@@ -102,12 +102,16 @@ public class LocalVariableScope implements VariableScope {
 
     @Override
     public String getBreakAddress() {
-        return breakAddress;
+        if (breakAddress == null) {
+            return outerScope.getBreakAddress();
+        } else return breakAddress;
     }
 
     @Override
     public String getContinueAddress() {
-        return continueAddress;
+        if (breakAddress == null) {
+            return outerScope.getContinueAddress();
+        } else return continueAddress;
     }
 
     @Override
